@@ -36,7 +36,7 @@ public abstract class Constants {
   public static final String ENTRIES_SPACE_NAME_AS_STRING = EXTENSION_SPACE_NAME + "." + "Data" + "." + "Entries";
 
   /** The Constant WYSIWYG_MACRO_CATEGORY. */
-  public static final String WYSIWYG_MACRO_CATEGORY = "bibliography.wysiwyg.category";
+  public static final String WYSIWYG_MACRO_CATEGORY = "Bibliography";
 
   /**
    * The mark replaced by the wiki bibliography page in citeproc output for
