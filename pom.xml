@@ -207,11 +207,11 @@
 	<distributionManagement>
 		<repository>
 			<id>projectsforge-private-releases</id>
-			<url>https://nexus.projectsforge.org/repository/projectsforge-private-releases/</url>
+			<url>https://nexus.projectsforge.org/repository/projectsforge-public-releases/</url>
 		</repository>
 		<snapshotRepository>
 			<id>projectsforge-private-snapshots</id>
-			<url>https://nexus.projectsforge.org/repository/projectsforge-private-snapshots//</url>
+			<url>https://nexus.projectsforge.org/repository/projectsforge-public-snapshots//</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>
