@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" demote-non-dropping-particle="never">
+<!-- This style was edited with the Visual CSL Editor (http://editor.citationstyles.org/visualEditor/) -->
+  <info>
+    <title>Projectsforge</title>
+    <id>http://www.zotero.org/styles/projectsforge</id>
+    <link rel="self" href="http://www.zotero.org/styles/projectsforge"/>
+    <author>
+      <name>Sébastien Aupetit</name>
+      <email>sebtic@projectsforge.org</email>
+    </author>
+    <updated>2016-08-29T11:05:21+00:00</updated>
+  </info>
+  <macro name="authors">
+    <group>
+      <names variable="author" font-variant="normal" font-weight="normal" delimiter=", " suffix=", ">
+        <name and="text" initialize-with="."/>
+        <label form="short" strip-periods="true" font-weight="normal" prefix=" "/>
+        <substitute>
+          <names variable="editor" font-weight="normal"/>
+        </substitute>
+      </names>
+    </group>
+  </macro>
+  <macro name="title">
+    <text variable="title" font-style="italic"/>
+  </macro>
+  <macro name="publisher">
+    <text variable="publisher" suffix=", "/>
+    <text variable="publisher-place" suffix=", "/>
+  </macro>
+  <macro name="numbers">
+    <text variable="ISSN" prefix="ISSN:" suffix=", "/>
+    <text variable="ISBN" font-weight="normal" prefix="ISBN:" suffix=", "/>
+    <text variable="DOI" prefix="DOI:" suffix=", "/>
+  </macro>
+  <macro name="issue">
+    <text variable="volume" prefix="vol. " suffix=", "/>
+    <text variable="issue" prefix="issue " suffix=", "/>
+    <text variable="number" prefix="num. " suffix=", "/>
+  </macro>
+  <macro name="pages">
+    <label suffix=" " variable="page" form="short"/>
+    <text variable="page" suffix=", "/>
+  </macro>
+  <macro name="edition">
+    <number suffix=" " variable="edition" form="long-ordinal"/>
+    <label suffix=", " variable="edition"/>
+  </macro>
+  <macro name="collection">
+    <choose>
+      <if match="any" variable="container-title">
+        <text variable="container-title" font-style="italic" prefix="in " suffix=", "/>
+      </if>
+      <else>
+        <text variable="collection-title" font-style="italic" prefix="in " suffix=", "/>
+      </else>
+    </choose>
+    <text variable="medium" font-style="italic" prefix="" suffix=", "/>
+  </macro>
+  <macro name="chapter">
+    <label suffix=": " variable="chapter-number"/>
+    <number suffix=", " variable="chapter-number"/>
+  </macro>
+  <macro name="typeofreport">
+    <text variable="genre" suffix=", "/>
+  </macro>
+  <citation collapse="citation-number">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout font-weight="normal" delimiter=", " prefix="~[" suffix="]">
+      <group>
+        <text value="[["/>
+        <text variable="citation-number"/>
+        <text value="&gt;&gt;BIBLIOGRAPHY_CITE_TARGET_MARK||anchor=&quot;bibentry-"/>
+        <text variable="citation-number"/>
+        <text value="&quot;]]"/>
+      </group>
+    </layout>
+  </citation>
+  <bibliography>
+    <sort>
+      <key variable="author"/>
+      <key variable="issued"/>
+      <key variable="title"/>
+    </sort>
+    <layout font-weight="bold" suffix=".">
+      <group display="block">
+        <group>
+          <text value="{{id name=&quot;bibentry-"/>
+          <text variable="citation-number"/>
+          <text value="&quot;/}}"/>
+        </group>
+        <text variable="citation-number" quotes="false" font-variant="normal" prefix="~[" suffix="] "/>
+        <text macro="authors" font-weight="normal"/>
+        <text macro="title" strip-periods="true" font-weight="normal" prefix="[[" suffix="&gt;&gt;BIBLIOGRAPHY_ENTRY_TARGET_MARK]], "/>
+        <choose>
+          <if type="article-journal article-magazine article-newspaper paper-conference" match="any">
+            <text macro="collection"/>
+            <text macro="issue"/>
+            <text macro="pages"/>
+            <text macro="publisher"/>
+            <text macro="numbers"/>
+          </if>
+          <else-if type="book manuscript report thesis" match="any">
+            <text macro="edition"/>
+            <text macro="typeofreport"/>
+            <text macro="issue"/>
+            <text macro="publisher"/>
+            <text macro="numbers" font-weight="normal"/>
+          </else-if>
+          <else-if type="chapter" match="any">
+            <text macro="chapter"/>
+            <text macro="collection"/>
+            <text macro="issue"/>
+            <text macro="publisher"/>
+            <text macro="numbers"/>
+          </else-if>
+          <else-if type="webpage" match="any">
+            <text variable="URL" suffix=", "/>
+            <date form="text" variable="accessed" font-weight="normal" prefix="Accessed: "/>
+          </else-if>
+          <else>
+            <text macro="collection"/>
+            <text macro="issue"/>
+            <text macro="pages"/>
+            <text macro="publisher"/>
+            <text macro="numbers"/>
+          </else>
+        </choose>
+        <date form="text" date-parts="year-month-day" variable="issued"/>
+      </group>
+    </layout>
+  </bibliography>
+</style>
