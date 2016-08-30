@@ -23,9 +23,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
@@ -320,10 +322,12 @@ public class DefaultBibliographyService implements BibliographyService, ScriptSe
    */
   @Override
   public Index findIndex(XWikiDocument document) {
+    Set<DocumentReference> visited = new HashSet<>();
     XWikiDocument curDoc = document;
     XWikiContext context = getContext();
     XWiki xwiki = context.getWiki();
 
+    visited.add(document.getDocumentReference());
     while (true) {
       if (curDoc.getXObject(Index.getClassReference(document)) != null) {
         // index found
@@ -335,6 +339,12 @@ public class DefaultBibliographyService implements BibliographyService, ScriptSe
       if (parentRef == null) {
         // there is no parent
         return null;
+      }
+      // protect against loop
+      if (visited.contains(parentRef)) {
+        return null;
+      } else {
+        visited.add(parentRef);
       }
       try {
         curDoc = xwiki.getDocument(parentRef, context);

@@ -5,8 +5,10 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import org.apache.commons.lang3.StringUtils;
@@ -238,19 +240,26 @@ public class Utils {
    * @return the document tree
    */
   public static List<XWikiDocument> getDocumentTree(BibliographyService service, XWikiDocument root) {
+    Set<DocumentReference> visited = new HashSet<>();
     List<XWikiDocument> descendants = new ArrayList<>();
     Deque<DocumentReference> pending = new LinkedList<>();
 
     XWikiContext context = service.getContext();
 
     descendants.add(root);
+    visited.add(root.getDocumentReference());
     try {
       pending.addAll(root.getChildrenReferences(context));
 
       while (!pending.isEmpty()) {
         DocumentReference currentRef = pending.removeFirst();
+        // protect against loop
+        if (visited.contains(currentRef)) {
+          continue;
+        }
         XWikiDocument current = context.getWiki().getDocument(currentRef, context);
         descendants.add(current);
+        visited.add(currentRef);
 
         List<DocumentReference> children = current.getChildrenReferences(context);
         for (int i = children.size() - 1; i >= 0; --i) {
