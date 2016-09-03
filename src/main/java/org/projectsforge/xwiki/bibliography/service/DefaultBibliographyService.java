@@ -54,7 +54,6 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
-import org.xwiki.script.service.ScriptService;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 import org.xwiki.wiki.manager.WikiManagerException;
 
@@ -75,7 +74,7 @@ import de.undercouch.citeproc.csl.CSLName;
  * Implementation of a <tt>BibliographyService</tt> component.
  */
 @Component
-public class DefaultBibliographyService implements BibliographyService, ScriptService {
+public class DefaultBibliographyService implements BibliographyService {
 
   /** The id regex. */
   private static Pattern ID_REGEX = Pattern.compile("^[a-zA-Z0-9:-_]{2,50}$");
