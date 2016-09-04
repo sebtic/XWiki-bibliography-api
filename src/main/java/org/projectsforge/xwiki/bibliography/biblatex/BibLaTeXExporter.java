@@ -368,6 +368,11 @@ public class BibLaTeXExporter {
    * @return the string
    */
   public static String export(CSLItemData itemData) {
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("Exporting {}", Utils.serializeCSLItemData(itemData));
+    }
+
     Map<String, String> entry = buildBibTeXEntry(itemData);
 
     StringJoiner joiner = new StringJoiner(",\n    ");
