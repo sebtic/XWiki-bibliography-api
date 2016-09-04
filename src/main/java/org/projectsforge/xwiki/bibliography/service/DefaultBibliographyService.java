@@ -297,7 +297,8 @@ public class DefaultBibliographyService implements BibliographyService {
           .createQuery(
               String.format("from doc.object(%s) as entry where entry.id = :key", Entry.getClassReferenceAsString()),
               Query.XWQL)
-          .bindValue("key", key).setWiki(StringUtils.defaultIfBlank(wikiReference.getName(), null)).setLimit(1);
+          .bindValue("key", StringUtils.trim(key)).setWiki(StringUtils.defaultIfBlank(wikiReference.getName(), null))
+          .setLimit(1);
       List<String> results = query.execute();
       if (results != null && !results.isEmpty()) {
         if (results.size() > 1) {
