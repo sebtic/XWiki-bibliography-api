@@ -59,6 +59,9 @@ public interface BibliographyService {
    */
   DocumentReference createPersonFromCSLName(CSLName name);
 
+  /**
+   * Ensure requirements.
+   */
   void ensureRequirements();
 
   /**
@@ -246,8 +249,8 @@ public interface BibliographyService {
    *
    * @param doc
    *          the doc
-   * @return true, if successful
+   * @return null if successfull, the error code otherwise
    */
-  boolean validateEntry(XWikiDocument doc);
+  String validateEntry(XWikiDocument doc);
 
 }

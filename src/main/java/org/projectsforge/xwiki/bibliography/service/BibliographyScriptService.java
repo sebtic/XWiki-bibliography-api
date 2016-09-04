@@ -214,9 +214,9 @@ public class BibliographyScriptService implements ScriptService {
    *
    * @param doc
    *          the doc
-   * @return true, if successful
+   * @return null if successfull, the error code otherwise
    */
-  public boolean validateEntry(XWikiDocument doc) {
+  public String validateEntry(XWikiDocument doc) {
     return service.validateEntry(doc);
   }
 

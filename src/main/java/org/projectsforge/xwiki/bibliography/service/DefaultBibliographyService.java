@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -871,7 +870,7 @@ public class DefaultBibliographyService implements BibliographyService {
    * validateEntry(com.xpn.xwiki.doc.XWikiDocument)
    */
   @Override
-  public boolean validateEntry(XWikiDocument doc) {
+  public String validateEntry(XWikiDocument doc) {
     BaseObject xobject = doc.getXObject(Entry.getClassReference(doc), true, getContext());
     // check for non duplicate id on the current wiki
     String id = xobject.getStringValue(CSLStringFields.ID.toString());
@@ -880,23 +879,25 @@ public class DefaultBibliographyService implements BibliographyService {
 
     if (StringUtils.isBlank(id)) {
       addError(Error.EMPTY_ID);
-      return false;
+      return Error.EMPTY_ID;
     }
 
     if (!ID_REGEX.matcher(id).matches()) {
       addError(Error.INVALID_ID_FORMAT, id);
-      return false;
+      return Error.INVALID_ID_FORMAT;
     }
 
     DocumentReference docRefFromId = findEntryReferenceOnWiki(doc.getDocumentReference().getWikiReference(), id);
-    if (doc.isNew() && docRefFromId != null) {
-      addError(Error.ID_ALREADY_EXISTS, id);
-      return false;
-    }
-    if (!doc.isNew()) {
-      if (docRefFromId != null && !Objects.equals(doc.getDocumentReference(), docRefFromId)) {
+    if (docRefFromId == null) {
+      // it is a creation and we are sure that id is unique
+    } else {
+      // either it is a creation with a conflicting id or it is an update
+      if (doc.getDocumentReference().equals(docRefFromId)) {
+        // it is the same document, with the same key => no problem
+      } else {
+        // two different document with the same key => there is a problem
         addError(Error.ID_ALREADY_EXISTS, id);
-        return false;
+        return Error.ID_ALREADY_EXISTS;
       }
     }
 
@@ -905,11 +906,11 @@ public class DefaultBibliographyService implements BibliographyService {
       String value = xobject.getStringValue(dateField.name());
       if (!dateField.isValid(value)) {
         addError(Error.INVALID_DATE, dateField, value);
-        return false;
+        return Error.INVALID_DATE;
       }
     }
 
     logger.debug("validateEntryId '{}' OK", id);
-    return true;
+    return null;
   }
 }
