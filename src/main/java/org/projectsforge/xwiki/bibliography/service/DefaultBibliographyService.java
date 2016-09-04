@@ -299,6 +299,7 @@ public class DefaultBibliographyService implements BibliographyService {
           .bindValue("key", StringUtils.trim(key)).setWiki(StringUtils.defaultIfBlank(wikiReference.getName(), null))
           .setLimit(1);
       List<String> results = query.execute();
+      logger.debug("findEntryReferenceOnWiki {} ({}) => {}", key, wikiReference, results);
       if (results != null && !results.isEmpty()) {
         if (results.size() > 1) {
           logger.warn("Multiple bibliographic entry for key {} on wiki {} : {}", key, wikiReference.getName(), results);
