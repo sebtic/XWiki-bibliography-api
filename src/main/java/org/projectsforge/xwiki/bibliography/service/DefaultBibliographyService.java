@@ -690,11 +690,12 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public DocumentReference getNewEntryReference() {
+    XWikiContext context = getContext();
     List<String> results = null;
     try {
       results = queryManager
           .createQuery(String.format("from doc.object(%s) as entry", Entry.getClassReferenceAsString()), Query.XWQL)
-          .execute();
+          .setWiki(context.getWikiId()).execute();
     } catch (QueryException ex) {
       addError(Error.QUERY, ex.getMessage());
       logger.warn("An error occurred while executing query ", ex);
@@ -715,7 +716,8 @@ public class DefaultBibliographyService implements BibliographyService {
       }
     }
     counter++;
-    return documentReferenceResolver.resolve(Entry.NAME_PREFIX + counter + Entry.NAME_SUFFIX);
+    return documentReferenceResolver.resolve(Entry.NAME_PREFIX + counter + Entry.NAME_SUFFIX,
+        context.getWikiReference());
   }
 
   /*
@@ -726,11 +728,12 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public DocumentReference getNewPersonReference() {
+    XWikiContext context = getContext();
     List<String> results = null;
     try {
       results = queryManager
           .createQuery(String.format("from doc.object(%s) as person", Person.getClassReferenceAsString()), Query.XWQL)
-          .execute();
+          .setWiki(context.getWikiId()).execute();
     } catch (QueryException ex) {
       addError(Error.QUERY, ex.getMessage());
       logger.warn("An error occurred while executing query ", ex);
@@ -751,7 +754,8 @@ public class DefaultBibliographyService implements BibliographyService {
       }
     }
     counter++;
-    return documentReferenceResolver.resolve(Person.NAME_PREFIX + counter + Person.NAME_SUFFIX);
+    return documentReferenceResolver.resolve(Person.NAME_PREFIX + counter + Person.NAME_SUFFIX,
+        context.getWikiReference());
   }
 
   /**
