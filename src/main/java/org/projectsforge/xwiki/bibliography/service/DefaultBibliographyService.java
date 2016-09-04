@@ -274,22 +274,7 @@ public class DefaultBibliographyService implements BibliographyService {
     return reference;
   }
 
-  /**
-   * Find entry reference on wiki.
-   *
-   * @param wikiReference
-   *          the wiki reference
-   * @param key
-   *          the key
-   * @return the document reference
-   */
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.projectsforge.xwiki.bibliography.service.BibliographyService#
-   * findEntryReferenceOnWiki(org.xwiki.model.reference.WikiReference,
-   * java.lang.String)
-   */
+  @Override
   public DocumentReference findEntryReferenceOnWiki(WikiReference wikiReference, String key) {
     try {
       Query query = queryManager

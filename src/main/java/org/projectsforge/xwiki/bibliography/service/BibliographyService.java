@@ -87,6 +87,17 @@ public interface BibliographyService {
   DocumentReference findEntryReference(Index index, String key);
 
   /**
+   * Find entry reference on wiki.
+   *
+   * @param wikiReference
+   *          the wiki reference
+   * @param key
+   *          the key
+   * @return the document reference
+   */
+  DocumentReference findEntryReferenceOnWiki(WikiReference wikiReference, String key);
+
+  /**
    * Find index.
    *
    * @param document

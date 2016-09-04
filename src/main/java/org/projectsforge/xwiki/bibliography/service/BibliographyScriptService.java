@@ -77,6 +77,19 @@ public class BibliographyScriptService implements ScriptService {
   }
 
   /**
+   * Find entry reference on wiki.
+   *
+   * @param wikiReference
+   *          the wiki reference
+   * @param key
+   *          the key
+   * @return the document reference
+   */
+  public DocumentReference findEntryReferenceOnWiki(WikiReference wikiReference, String key) {
+    return service.findEntryReferenceOnWiki(wikiReference, key);
+  }
+
+  /**
    * Gets the document referencing entry.
    *
    * @param entryId
