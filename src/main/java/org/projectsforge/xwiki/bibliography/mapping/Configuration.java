@@ -98,15 +98,17 @@ public class Configuration {
   public String getBibliographyStyle(String fieldName) {
     String style = null;
     if (xobject != null) {
-      style = StringUtils.defaultIfBlank(xobject.getLargeStringValue(fieldName), "ieee");
+      style = StringUtils.defaultIfBlank(xobject.getLargeStringValue(fieldName), null);
     }
     if (StringUtils.isBlank(style)) {
       try {
         style = IOUtils.toString(getClass().getResource("/csl/" + fieldName + ".csl"), Charset.forName("UTF-8"));
       } catch (IOException ex) {
         service.getLogger().warn("Can not find default for style " + fieldName, ex);
-        style = "ieee";
       }
+    }
+    if (StringUtils.isBlank(style)) {
+      style = "ieee";
     }
     return style;
   }
