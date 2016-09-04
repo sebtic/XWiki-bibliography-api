@@ -2,7 +2,6 @@ package org.projectsforge.xwiki.bibliography.mapping;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -118,12 +117,16 @@ public class Configuration {
    *
    * @return the extra wiki sources
    */
+  @SuppressWarnings("unchecked")
   public List<String> getExtraWikiSources() {
+    List<String> result = null;
     if (xobject != null) {
-      return Arrays
-          .asList(StringUtils.defaultString(xobject.getLargeStringValue(FIELD_EXTRA_SOURCES)).trim().split("\\|"));
+      result = xobject.getListValue(FIELD_EXTRA_SOURCES);
     }
-    return Collections.emptyList();
+    if (result == null) {
+      result = Collections.emptyList();
+    }
+    return result;
   }
 
   /**
