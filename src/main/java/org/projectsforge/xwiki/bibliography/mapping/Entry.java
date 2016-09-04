@@ -2,7 +2,6 @@ package org.projectsforge.xwiki.bibliography.mapping;
 
 import java.io.IOException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.projectsforge.xwiki.bibliography.Constants;
 import org.projectsforge.xwiki.bibliography.Error;
 import org.projectsforge.xwiki.bibliography.Utils;
@@ -39,9 +38,6 @@ public class Entry {
   public static final String FIELD_CSL_ITEM_DATA = "CSLItemData";
 
   private static final String FIELD_RENDERED = "rendered";
-
-  /** The Constant FIELD_SEARCH_VALUE. */
-  public static final String FIELD_SEARCH_VALUE = "searchValue";
 
   /** The logger. */
   private static Logger logger = LoggerFactory.getLogger(Entry.class);
@@ -209,7 +205,6 @@ public class Entry {
 
       document.setTitle(itemData.getId());
       xobject.setLargeStringValue(FIELD_RENDERED, rendered);
-      xobject.setLargeStringValue(FIELD_SEARCH_VALUE, StringUtils.stripAccents(rendered));
       xobject.setLargeStringValue(FIELD_BIBLATEX, BibLaTeXExporter.export(itemData));
     } catch (IOException ex) {
       service.addError(Error.CSL, document.getDocumentReference(), xobject, ex.getMessage());

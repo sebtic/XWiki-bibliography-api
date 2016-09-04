@@ -188,27 +188,6 @@ public class Utils {
   }
 
   /**
-   * Deserialize CSL name.
-   *
-   * @param service
-   *          the service
-   * @param value
-   *          the value
-   * @return the CSL name
-   */
-  public static CSLName deserializeCSLName(BibliographyService service, String value) {
-    if (StringUtils.isNotBlank(value)) {
-      try {
-        return CSLName.fromJson(new JsonParser(new JsonLexer(new StringReader(value))).parseObject());
-      } catch (IOException ex) {
-        service.addError(Error.JSON_DECODING, value);
-        logger.warn("Could not decode JSON data", ex);
-      }
-    }
-    return new CSLName();
-  }
-
-  /**
    * Deserialize keys.
    *
    * @param service

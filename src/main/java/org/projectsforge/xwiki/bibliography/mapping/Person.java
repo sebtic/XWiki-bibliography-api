@@ -5,7 +5,6 @@ import java.util.StringJoiner;
 import org.apache.commons.lang3.StringUtils;
 import org.projectsforge.xwiki.bibliography.Constants;
 import org.projectsforge.xwiki.bibliography.Error;
-import org.projectsforge.xwiki.bibliography.Utils;
 import org.projectsforge.xwiki.bibliography.service.BibliographyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +24,6 @@ import de.undercouch.citeproc.csl.CSLNameBuilder;
  * The Class Person.
  */
 public class Person {
-
-  /** The Constant FIELD_CSLNAME. */
-  public static final String FIELD_CSLNAME = "CSLName";
-
   /** The Constant FIELD_FAMILY. */
   public static final String FIELD_FAMILY = "family";
 
@@ -43,9 +38,6 @@ public class Person {
 
   /** The Constant FIELD_SUFFIX. */
   public static final String FIELD_SUFFIX = "suffix";
-
-  /** The Constant FIELD_SEARCH_VALUE. */
-  public static final String FIELD_SEARCH_VALUE = "searchValue";
 
   /** The logger. */
   private static Logger logger = LoggerFactory.getLogger(Person.class);
@@ -134,7 +126,33 @@ public class Person {
    * @return the CSL object
    */
   public CSLName getCSLObject() {
-    return Utils.deserializeCSLName(service, xobject.getLargeStringValue(FIELD_CSLNAME));
+    String family = StringUtils.defaultString(xobject.getStringValue(FIELD_FAMILY));
+    String given = StringUtils.defaultString(xobject.getStringValue(FIELD_GIVEN));
+    String droppingParticle = StringUtils.defaultString(xobject.getStringValue(FIELD_DROPPING_PARTICLE));
+    String nonDroppingParticle = StringUtils.defaultString(xobject.getStringValue(FIELD_NON_DROPPING_PARTICLE));
+    String suffix = StringUtils.defaultString(xobject.getStringValue(FIELD_SUFFIX));
+
+    // clear empty fields
+    if (StringUtils.isBlank(family)) {
+      family = null;
+    }
+    if (StringUtils.isBlank(given)) {
+      given = null;
+    }
+    if (StringUtils.isBlank(droppingParticle)) {
+      droppingParticle = null;
+    }
+    if (StringUtils.isBlank(nonDroppingParticle)) {
+      nonDroppingParticle = null;
+    }
+    if (StringUtils.isBlank(suffix)) {
+      suffix = null;
+    }
+
+    CSLName name = new CSLNameBuilder().family(family).given(given).droppingParticle(droppingParticle)
+        .nonDroppingParticle(nonDroppingParticle).suffix(suffix).build();
+
+    return name;
   }
 
   /**
@@ -204,30 +222,6 @@ public class Person {
     }
 
     xobject.setLargeStringValue(FIELD_RENDERED_GIVEN_FIRST, renderedGivenFirstBuilder.toString().trim());
-
-    // field used to search without accent
-    xobject.setLargeStringValue(FIELD_SEARCH_VALUE, StringUtils.stripAccents(renderedFamilyFirst));
-
-    // clear empty fields
-    if (StringUtils.isBlank(family)) {
-      family = null;
-    }
-    if (StringUtils.isBlank(given)) {
-      given = null;
-    }
-    if (StringUtils.isBlank(droppingParticle)) {
-      droppingParticle = null;
-    }
-    if (StringUtils.isBlank(nonDroppingParticle)) {
-      nonDroppingParticle = null;
-    }
-    if (StringUtils.isBlank(suffix)) {
-      suffix = null;
-    }
-
-    CSLName name = new CSLNameBuilder().family(family).given(given).droppingParticle(droppingParticle)
-        .nonDroppingParticle(nonDroppingParticle).suffix(suffix).build();
-    xobject.setLargeStringValue(FIELD_CSLNAME, Utils.serializeCSLName(name));
   }
 
 }
