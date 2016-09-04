@@ -73,6 +73,8 @@ public class Configuration {
   /** The xobject. */
   private BaseObject xobject;
 
+  private BibliographyService service;
+
   /**
    * Instantiates a new configuration.
    *
@@ -82,6 +84,7 @@ public class Configuration {
    *          the document
    */
   public Configuration(BibliographyService service, XWikiDocument document) {
+    this.service = service;
     xobject = document.getXObject(Configuration.getClassReference(document));
   }
 
@@ -99,9 +102,9 @@ public class Configuration {
     }
     if (StringUtils.isBlank(style)) {
       try {
-        style = IOUtils.toString(getClass().getClassLoader().getResource("/csl/" + fieldName + ".csl"),
-            Charset.forName("UTF-8"));
-      } catch (IOException e) {
+        style = IOUtils.toString(getClass().getResource("/csl/" + fieldName + ".csl"), Charset.forName("UTF-8"));
+      } catch (IOException ex) {
+        service.getLogger().warn("Can not find default for style " + fieldName, ex);
         style = "ieee";
       }
     }
