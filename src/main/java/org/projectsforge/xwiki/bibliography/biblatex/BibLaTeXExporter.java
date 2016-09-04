@@ -8,6 +8,8 @@ import java.util.StringJoiner;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.projectsforge.xwiki.bibliography.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.undercouch.citeproc.csl.CSLDate;
 import de.undercouch.citeproc.csl.CSLItemData;
@@ -20,6 +22,8 @@ public class BibLaTeXExporter {
 
   private static final String BIBLATEX_TYPE = "biblatex-type";
   private static final String BIBLATEX_ID = "id";
+
+  private static Logger logger = LoggerFactory.getLogger(BibLaTeXExporter.class);
 
   private static void addEscapedField(Map<String, String> entry, String field, String text) {
     if (StringUtils.isNotBlank(text)) {
@@ -43,6 +47,9 @@ public class BibLaTeXExporter {
       for (CSLName name : names) {
         StringJoiner joiner = new StringJoiner(",");
 
+        if (logger.isDebugEnabled()) {
+          logger.debug("CSLName {}", Utils.serializeCSLName(name));
+        }
         String family = "";
         if (StringUtils.isNotBlank(name.getDroppingParticle())) {
           family = family + escapeUpperAndComa(name.getDroppingParticle()) + " ";

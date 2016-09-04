@@ -141,7 +141,7 @@ public class DefaultBibliographyService implements BibliographyService {
    * createEntryFromCSLItemData(de.undercouch.citeproc.csl.CSLItemData)
    */
   @Override
-  public DocumentReference createEntryFromCSLItemData(CSLItemData data) {
+  public synchronized DocumentReference createEntryFromCSLItemData(CSLItemData data) {
 
     if (!ID_REGEX.matcher(data.getId()).matches()) {
       addError(Error.INVALID_ID_FORMAT, data.getId());
@@ -175,7 +175,7 @@ public class DefaultBibliographyService implements BibliographyService {
    * createPersonFromCSLName(de.undercouch.citeproc.csl.CSLName)
    */
   @Override
-  public DocumentReference createPersonFromCSLName(CSLName name) {
+  public synchronized DocumentReference createPersonFromCSLName(CSLName name) {
     XWikiContext context = getContext();
     XWiki xwiki = context.getWiki();
     DocumentReference docRef = getNewPersonReference();

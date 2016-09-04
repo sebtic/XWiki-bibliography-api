@@ -205,6 +205,7 @@ public class Entry {
       csl.setOutputFormat("text");
       Bibliography bibiography = csl.makeBibliography();
       String rendered = bibiography.getEntries()[0].trim();
+      rendered = rendered.replaceAll(Constants.ENTRY_TARGET_MARK, document.getDocumentReference().toString());
 
       document.setTitle(itemData.getId());
       xobject.setLargeStringValue(FIELD_RENDERED, rendered);
