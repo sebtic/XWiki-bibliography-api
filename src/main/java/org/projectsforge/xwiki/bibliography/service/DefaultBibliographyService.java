@@ -769,7 +769,11 @@ public class DefaultBibliographyService implements BibliographyService {
     try {
       XWikiContext context = getContext();
       XWikiDocument personDoc = context.getWiki().getDocument(personRef, context);
-      return new Person(this, personDoc);
+      if (personDoc.isNew()) {
+        return null;
+      } else {
+        return new Person(this, personDoc);
+      }
     } catch (XWikiException ex) {
       addError(Error.XWIKI_GET_DOCUMENT, personRef);
       logger.warn("Can not load Person object", ex);
@@ -786,7 +790,8 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public Person getPerson(String reference) {
-    return getPerson(documentReferenceResolver.resolve(reference));
+    XWikiContext context = getContext();
+    return getPerson(documentReferenceResolver.resolve(reference, context.getWikiReference()));
   }
 
   /*
