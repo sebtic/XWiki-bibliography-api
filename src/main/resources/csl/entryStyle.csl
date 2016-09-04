@@ -71,11 +71,7 @@
     </sort>
     <layout font-weight="normal" delimiter=", " prefix="~[" suffix="]">
       <group>
-        <text value="[["/>
         <text variable="citation-number"/>
-        <text value="&gt;&gt;BIBLIOGRAPHY_CITE_TARGET_MARK||anchor=&quot;bibentry-"/>
-        <text variable="citation-number"/>
-        <text value="&quot;]]"/>
       </group>
     </layout>
   </citation>
