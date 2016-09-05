@@ -126,8 +126,11 @@ public enum CSLNameFields {
    *          the xobject
    * @param itemData
    *          the item data
+   * @param authorReference
+   *          the author reference
    */
-  public void fillFromCSLObject(BibliographyService service, BaseObject xobject, CSLItemData itemData) {
+  public void fillFromCSLObject(BibliographyService service, BaseObject xobject, CSLItemData itemData,
+      DocumentReference authorReference) {
     CSLName[] names = get(itemData);
     if (names == null || names.length == 0) {
       xobject.setLargeStringValue(toString(), "");
@@ -139,7 +142,7 @@ public enum CSLNameFields {
       DocumentReference docRef = service.findPersonFromCSLName(new WikiReference(service.getContext().getWikiId()),
           value);
       if (docRef == null) {
-        docRef = service.createPersonFromCSLName(value);
+        docRef = service.createPersonFromCSLName(authorReference, value);
       }
       if (docRef != null) {
         joiner.add(Utils.LOCAL_REFERENCE_SERIALIZER.serialize(docRef));

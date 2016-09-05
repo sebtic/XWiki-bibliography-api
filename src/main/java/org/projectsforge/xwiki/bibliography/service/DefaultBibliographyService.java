@@ -140,7 +140,8 @@ public class DefaultBibliographyService implements BibliographyService {
    * createEntryFromCSLItemData(de.undercouch.citeproc.csl.CSLItemData)
    */
   @Override
-  public synchronized DocumentReference createEntryFromCSLItemData(CSLItemData data) {
+  public synchronized DocumentReference createEntryFromCSLItemData(DocumentReference authorReference,
+      CSLItemData data) {
 
     if (!ID_REGEX.matcher(data.getId()).matches()) {
       addError(Error.INVALID_ID_FORMAT, data.getId());
@@ -153,15 +154,15 @@ public class DefaultBibliographyService implements BibliographyService {
     XWikiDocument document;
     try {
       document = xwiki.getDocument(docRef, context);
-      document.setAuthorReference(context.getUserReference());
-      document.setContentAuthorReference(context.getUserReference());
+      document.setAuthorReference(authorReference);
+      document.setContentAuthorReference(authorReference);
     } catch (XWikiException ex) {
       addError(Error.XWIKI_GET_DOCUMENT, docRef);
       logger.warn("An error occurred while creating entry", ex);
       return null;
     }
     Entry entry = new Entry(this, document);
-    entry.fillFromCSLObject(data);
+    entry.fillFromCSLObject(authorReference, data);
     entry.save();
     return document.getDocumentReference();
 
@@ -174,15 +175,15 @@ public class DefaultBibliographyService implements BibliographyService {
    * createPersonFromCSLName(de.undercouch.citeproc.csl.CSLName)
    */
   @Override
-  public synchronized DocumentReference createPersonFromCSLName(CSLName name) {
+  public synchronized DocumentReference createPersonFromCSLName(DocumentReference authorReference, CSLName name) {
     XWikiContext context = getContext();
     XWiki xwiki = context.getWiki();
     DocumentReference docRef = getNewPersonReference();
     XWikiDocument document;
     try {
       document = xwiki.getDocument(docRef, context);
-      document.setAuthorReference(context.getUserReference());
-      document.setContentAuthorReference(context.getUserReference());
+      document.setAuthorReference(authorReference);
+      document.setContentAuthorReference(authorReference);
     } catch (XWikiException ex) {
       addError(Error.XWIKI_GET_DOCUMENT, docRef);
       logger.warn("An error occurred while creating person", ex);
@@ -208,18 +209,6 @@ public class DefaultBibliographyService implements BibliographyService {
         XWikiDocument adminGroupDoc = wiki.getDocument(adminGroupRef, context);
         adminGroupDoc.newXObject(xwikiGroupsRef, context);
         wiki.saveDocument(adminGroupDoc, context);
-      } catch (XWikiException ex) {
-        logger.warn("An error occurred", ex);
-      }
-    }
-
-    DocumentReference userGroupRef = new DocumentReference(context.getWikiId(), "XWiki", "BibliographyUserGroup");
-    if (!wiki.exists(userGroupRef, context)) {
-      // the group does not exist, then we need to create it
-      try {
-        XWikiDocument userGroupDoc = wiki.getDocument(userGroupRef, context);
-        userGroupDoc.newXObject(xwikiGroupsRef, context);
-        wiki.saveDocument(userGroupDoc, context);
       } catch (XWikiException ex) {
         logger.warn("An error occurred", ex);
       }

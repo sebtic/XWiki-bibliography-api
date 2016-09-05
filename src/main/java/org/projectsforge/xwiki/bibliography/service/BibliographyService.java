@@ -44,20 +44,24 @@ public interface BibliographyService {
   /**
    * Creates the entry from the CSLItemData on the current wiki.
    *
+   * @param authorReference
+   *          the author reference
    * @param data
    *          the data
    * @return the document reference
    */
-  DocumentReference createEntryFromCSLItemData(CSLItemData data);
+  DocumentReference createEntryFromCSLItemData(DocumentReference authorReference, CSLItemData data);
 
   /**
    * Create a person in the database populated with the given CSLName.
    *
+   * @param authorReference
+   *          the author reference
    * @param name
    *          the CSL data
    * @return the document reference or null if there is an exception
    */
-  DocumentReference createPersonFromCSLName(CSLName name);
+  DocumentReference createPersonFromCSLName(DocumentReference authorReference, CSLName name);
 
   /**
    * Ensure requirements.

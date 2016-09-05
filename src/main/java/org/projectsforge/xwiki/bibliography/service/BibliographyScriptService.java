@@ -55,12 +55,14 @@ public class BibliographyScriptService implements ScriptService {
   /**
    * Creates the entry from CSL item data.
    *
+   * @param authorReference
+   *          the author reference
    * @param data
    *          the data
    * @return the document reference
    */
-  public DocumentReference createEntryFromCSLItemData(CSLItemData data) {
-    return service.createEntryFromCSLItemData(data);
+  public DocumentReference createEntryFromCSLItemData(DocumentReference authorReference, CSLItemData data) {
+    return service.createEntryFromCSLItemData(authorReference, data);
   }
 
   /**

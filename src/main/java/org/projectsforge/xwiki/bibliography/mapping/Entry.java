@@ -37,6 +37,7 @@ public class Entry {
   /** The Constant FIELD_CSL_ITEM_DATA. */
   public static final String FIELD_CSL_ITEM_DATA = "CSLItemData";
 
+  /** The Constant FIELD_RENDERED. */
   private static final String FIELD_RENDERED = "rendered";
 
   /** The logger. */
@@ -48,6 +49,7 @@ public class Entry {
   /** The Constant NAME_SUFFIX. */
   public static final String NAME_SUFFIX = ".WebHome";
 
+  /** The Constant FIELD_BIBLATEX. */
   private static final String FIELD_BIBLATEX = "biblatex";
 
   /**
@@ -108,10 +110,12 @@ public class Entry {
   /**
    * Fill from CSL object.
    *
+   * @param authorReference
+   *          the author reference
    * @param itemData
    *          the item data
    */
-  public void fillFromCSLObject(CSLItemData itemData) {
+  public void fillFromCSLObject(DocumentReference authorReference, CSLItemData itemData) {
     for (CSLTypeFields field : CSLTypeFields.values()) {
       field.fillFromCSLObject(service, xobject, itemData);
     }
@@ -121,7 +125,7 @@ public class Entry {
     }
 
     for (CSLNameFields field : CSLNameFields.values()) {
-      field.fillFromCSLObject(service, xobject, itemData);
+      field.fillFromCSLObject(service, xobject, itemData, authorReference);
     }
 
     for (CSLDateFields field : CSLDateFields.values()) {
