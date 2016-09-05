@@ -167,6 +167,8 @@ public class Entry {
     context.setUserReference(authorReference);
     try {
       try {
+        document.setAuthorReference(authorReference);
+        document.setContentAuthorReference(authorReference);
         context.getWiki().saveDocument(document, context);
       } catch (XWikiException ex) {
         logger.warn("Failed saving document", ex);

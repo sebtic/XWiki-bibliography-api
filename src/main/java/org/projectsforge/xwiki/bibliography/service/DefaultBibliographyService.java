@@ -154,8 +154,6 @@ public class DefaultBibliographyService implements BibliographyService {
     XWikiDocument document;
     try {
       document = xwiki.getDocument(docRef, context);
-      document.setAuthorReference(authorReference);
-      document.setContentAuthorReference(authorReference);
     } catch (XWikiException ex) {
       addError(Error.XWIKI_GET_DOCUMENT, docRef);
       logger.warn("An error occurred while creating entry", ex);
@@ -182,8 +180,6 @@ public class DefaultBibliographyService implements BibliographyService {
     XWikiDocument document;
     try {
       document = xwiki.getDocument(docRef, context);
-      document.setAuthorReference(authorReference);
-      document.setContentAuthorReference(authorReference);
     } catch (XWikiException ex) {
       addError(Error.XWIKI_GET_DOCUMENT, docRef);
       logger.warn("An error occurred while creating person", ex);
@@ -457,7 +453,7 @@ public class DefaultBibliographyService implements BibliographyService {
           DocumentReference docRef = documentReferenceResolver.resolve(docId, wikiReference);
           XWikiDocument doc = wiki.getDocument(docRef, context);
           List<String> keys = new LocalIndex(this, doc, null).getKeys();
-          if (keys.contains(entryId)) {
+          if (keys.contains(entryId) && !referencing.contains(docRef)) {
             referencing.add(docRef);
           }
         }

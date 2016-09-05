@@ -170,6 +170,8 @@ public class Person {
     context.setUserReference(authorReference);
     try {
       try {
+        document.setAuthorReference(authorReference);
+        document.setContentAuthorReference(authorReference);
         context.getWiki().saveDocument(document, context);
       } catch (XWikiException ex) {
         service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
