@@ -208,8 +208,8 @@ public class BibLaTeXImporter {
   public List<CSLItemData> parseBibTeX(BibliographyService service, String bibtex) {
     List<CSLItemData> results = new ArrayList<>();
 
-    try (InputStreamReader reader = new InputStreamReader(
-        new ByteArrayInputStream(bibtex.getBytes(Charset.forName("UTF-8"))))) {
+    try (InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(bibtex.replaceAll("\r", " ")
+        .replaceAll("\n", " ").replaceAll("\\s+", " ").getBytes(Charset.forName("UTF-8"))))) {
 
       BibTeXDatabase db = bibtexParser.parse(reader);
 
