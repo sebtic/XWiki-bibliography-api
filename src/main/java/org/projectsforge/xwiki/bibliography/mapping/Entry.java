@@ -157,14 +157,23 @@ public class Entry {
 
   /**
    * Save.
+   *
+   * @param authorReference
+   *          the author reference
    */
-  public void save() {
+  public void save(DocumentReference authorReference) {
     XWikiContext context = service.getContext();
+    DocumentReference oldUser = context.getUserReference();
+    context.setUserReference(authorReference);
     try {
-      context.getWiki().saveDocument(document, context);
-    } catch (XWikiException ex) {
-      logger.warn("Failed saving document", ex);
-      service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
+      try {
+        context.getWiki().saveDocument(document, context);
+      } catch (XWikiException ex) {
+        logger.warn("Failed saving document", ex);
+        service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
+      }
+    } finally {
+      context.setUserReference(oldUser);
     }
   }
 

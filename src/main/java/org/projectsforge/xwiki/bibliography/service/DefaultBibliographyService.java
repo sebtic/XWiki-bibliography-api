@@ -163,7 +163,7 @@ public class DefaultBibliographyService implements BibliographyService {
     }
     Entry entry = new Entry(this, document);
     entry.fillFromCSLObject(authorReference, data);
-    entry.save();
+    entry.save(authorReference);
     return document.getDocumentReference();
 
   }
@@ -191,7 +191,7 @@ public class DefaultBibliographyService implements BibliographyService {
     }
     Person person = new Person(this, document);
     person.fillFromCSLObject(name);
-    person.save();
+    person.save(authorReference);
     return document.getDocumentReference();
   }
 
@@ -562,7 +562,7 @@ public class DefaultBibliographyService implements BibliographyService {
           BaseObject xobject = entryDoc.getXObject(Entry.getClassReference(entryDoc));
 
           for (CSLNameFields field : CSLNameFields.values()) {
-            if (field.decode(xobject).contains(personId)) {
+            if (field.decode(xobject).contains(personId) && !referencing.contains(entryRef)) {
               referencing.add(entryRef);
             }
           }

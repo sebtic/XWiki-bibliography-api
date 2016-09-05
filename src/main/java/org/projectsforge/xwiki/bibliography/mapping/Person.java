@@ -48,7 +48,10 @@ public class Person {
   /** The Constant NAME_SUFFIX. */
   public static final String NAME_SUFFIX = ".WebHome";
 
+  /** The Constant FIELD_RENDERED_GIVEN_FIRST. */
   private static final String FIELD_RENDERED_GIVEN_FIRST = "renderedGivenFirst";
+
+  /** The Constant FIELD_RENDERED_FAMILY_FIRST. */
   private static final String FIELD_RENDERED_FAMILY_FIRST = "renderedFamilyFirst";
 
   /**
@@ -157,14 +160,23 @@ public class Person {
 
   /**
    * Save.
+   *
+   * @param authorReference
+   *          the author reference
    */
-  public void save() {
+  public void save(DocumentReference authorReference) {
     XWikiContext context = service.getContext();
+    DocumentReference oldUser = context.getUserReference();
+    context.setUserReference(authorReference);
     try {
-      context.getWiki().saveDocument(document, context);
-    } catch (XWikiException ex) {
-      service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
-      logger.warn("Failed saving document", ex);
+      try {
+        context.getWiki().saveDocument(document, context);
+      } catch (XWikiException ex) {
+        service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
+        logger.warn("Failed saving document", ex);
+      }
+    } finally {
+      context.setUserReference(oldUser);
     }
   }
 
