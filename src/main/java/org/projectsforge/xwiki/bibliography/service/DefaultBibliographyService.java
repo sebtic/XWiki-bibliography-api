@@ -76,7 +76,7 @@ import de.undercouch.citeproc.csl.CSLName;
 public class DefaultBibliographyService implements BibliographyService {
 
   /** The id regex. */
-  private static Pattern ID_REGEX = Pattern.compile("^[a-zA-Z0-9:\\-_]{2,50}$");
+  private static Pattern ID_REGEX = Pattern.compile("^[a-zA-Z\\.0-9:\\-_]{2,50}$");
 
   /** The logger. */
   @Inject
