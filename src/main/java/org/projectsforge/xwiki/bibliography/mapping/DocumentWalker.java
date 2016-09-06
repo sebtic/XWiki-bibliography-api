@@ -15,9 +15,12 @@ import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
+import org.xwiki.security.authorization.AuthorizationManager;
+import org.xwiki.security.authorization.Right;
 
 import com.google.common.base.Objects;
 import com.xpn.xwiki.XWikiContext;
@@ -67,6 +70,10 @@ public class DocumentWalker {
     Node(XWikiDocument document) {
       this.documentReference = document.getDocumentReference();
       this.document = document;
+    }
+
+    public boolean canView() {
+      return authorizationManager.hasAccess(Right.VIEW, service.getContext().getUserReference(), documentReference);
     }
 
     /*
@@ -266,8 +273,9 @@ public class DocumentWalker {
      * @return the parent
      */
     public Node getParent() {
-      EntityReference parentSpace = getDocumentReference().getLastSpaceReference().getParent();
-      if (parentSpace.getType() == EntityType.SPACE) {
+      SpaceReference spaceReference = getDocumentReference().getLastSpaceReference();
+      EntityReference parentSpace = spaceReference.getParent();
+      if (parentSpace != null && parentSpace.getType() == EntityType.SPACE) {
         DocumentReference parentRef = new DocumentReference(
             new EntityReference("WebHome", EntityType.DOCUMENT, parentSpace));
         return getNode(parentRef);
@@ -289,7 +297,7 @@ public class DocumentWalker {
           return result;
         }
       }
-      return getParent();
+      return null;
     }
 
     /**
@@ -329,6 +337,19 @@ public class DocumentWalker {
       return service;
     }
 
+    public String getTitle() {
+      return getXWikiDocument().getTitle();
+    }
+
+    public String getTranslatedTitle() {
+      try {
+        return getXWikiDocument().getTranslatedDocument(service.getContext()).getTitle();
+      } catch (XWikiException ex) {
+        logger.warn("An error occurred while loading document " + documentReference, ex);
+        return "";
+      }
+    }
+
     /**
      * Gets the tree.
      *
@@ -341,6 +362,10 @@ public class DocumentWalker {
         results.addAll(child.getTree());
       }
       return results;
+    }
+
+    public DocumentReference getUser() {
+      return service.getContext().getUserReference();
     }
 
     /**
@@ -656,6 +681,8 @@ public class DocumentWalker {
   /** The service. */
   private BibliographyService service;
 
+  private AuthorizationManager authorizationManager;
+
   /**
    * Instantiates a new document walker.
    *
@@ -667,10 +694,11 @@ public class DocumentWalker {
    *          the query manager
    */
   public DocumentWalker(BibliographyService service, DocumentReferenceResolver<String> documentReferenceResolver,
-      QueryManager queryManager) {
+      QueryManager queryManager, AuthorizationManager authorizationManager) {
     this.service = service;
     this.documentReferenceResolver = documentReferenceResolver;
     this.queryManager = queryManager;
+    this.authorizationManager = authorizationManager;
   }
 
   /**

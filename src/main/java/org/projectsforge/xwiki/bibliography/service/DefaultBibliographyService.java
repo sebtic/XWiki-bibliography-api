@@ -54,6 +54,7 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
+import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 import org.xwiki.wiki.manager.WikiManagerException;
 
@@ -108,6 +109,9 @@ public class DefaultBibliographyService implements BibliographyService {
   /** The wiki descriptor manager. */
   @Inject
   private WikiDescriptorManager wikiDescriptorManager;
+
+  @Inject
+  private AuthorizationManager authorizationManager;
 
   /*
    * (non-Javadoc)
@@ -421,7 +425,7 @@ public class DefaultBibliographyService implements BibliographyService {
     XWikiContext context = getContext();
     DocumentWalker result = (DocumentWalker) context.get(DOCUMENT_WALKER);
     if (result == null) {
-      result = new DocumentWalker(this, documentReferenceResolver, queryManager);
+      result = new DocumentWalker(this, documentReferenceResolver, queryManager, authorizationManager);
     }
     return result;
   }
