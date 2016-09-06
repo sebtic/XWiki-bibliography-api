@@ -148,14 +148,14 @@ public class DocumentWalker {
                 .createQuery(
                     "select distinct doc.fullName from Document doc where doc.name <> 'WebHome' and doc.space = :space and doc.hidden = :hidden",
                     Query.XWQL)
-                .bindValue("space", spaceName).bindValue("hidden", includeHidden ? 1 : 0).setWiki(context.getWikiId())
+                .bindValue("space", spaceName).bindValue("hidden", includeHidden).setWiki(context.getWikiId())
                 .execute());
             // the children which are nested spaces
             for (String space : queryManager
                 .createQuery(
                     "select distinct space.reference from Space space where space.parent = :space and doc.hidden = :hidden",
                     Query.XWQL)
-                .bindValue("space", spaceName).bindValue("hidden", includeHidden ? 1 : 0).setWiki(context.getWikiId())
+                .bindValue("space", spaceName).bindValue("hidden", includeHidden).setWiki(context.getWikiId())
                 .<String> execute()) {
               results.add(space + ".WebHome");
             }
@@ -362,10 +362,6 @@ public class DocumentWalker {
         results.addAll(child.getTree());
       }
       return results;
-    }
-
-    public DocumentReference getUser() {
-      return service.getContext().getUserReference();
     }
 
     /**
