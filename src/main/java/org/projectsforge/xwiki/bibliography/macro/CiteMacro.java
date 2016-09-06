@@ -21,6 +21,7 @@ import org.xwiki.rendering.transformation.MacroTransformationContext;
 
 import com.xpn.xwiki.XWikiContext;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Cite macro implementation .
  */
@@ -37,20 +38,20 @@ public class CiteMacro extends AbstractMacro<CiteMacroParameters> {
   /** The Constant MACRO_NAME. */
   public static final String MACRO_NAME = "cite";
 
-  /** The Constant WYSIWYG_NAME. */
-  public static final String WYSIWYG_NAME = "Cite a bibliographic entry";
-
   /** The Constant MACRO_BLOCK_MATCHER. */
   public static final MacroBlockMatcher MACRO_BLOCK_MATCHER = new MacroBlockMatcher(MACRO_NAME);
 
-  /** The xwiki context provider. */
-  @Inject
-  private Provider<XWikiContext> xwikiContextProvider;
+  /** The Constant WYSIWYG_NAME. */
+  public static final String WYSIWYG_NAME = "Cite a bibliographic entry";
 
   /** The component manager provider. */
   @Inject
   @Named("context")
   private Provider<ComponentManager> componentManagerProvider;
+
+  /** The xwiki context provider. */
+  @Inject
+  private Provider<XWikiContext> xwikiContextProvider;
 
   /**
    * Create and initialize the descriptor of the macro.

@@ -36,14 +36,14 @@ public enum CSLTypeFields {
     return null;
   }
 
-  /** The setter. */
-  private BiConsumer<CSLItemDataBuilder, CSLType> setter;
+  /** The getter. */
+  private Function<CSLItemData, CSLType> getter;
 
   /** The name. */
   private String name;
 
-  /** The getter. */
-  private Function<CSLItemData, CSLType> getter;
+  /** The setter. */
+  private BiConsumer<CSLItemDataBuilder, CSLType> setter;
 
   /**
    * Instantiates a new CSL type fields.
@@ -120,7 +120,7 @@ public enum CSLTypeFields {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Enum#toString()
    */
   @Override

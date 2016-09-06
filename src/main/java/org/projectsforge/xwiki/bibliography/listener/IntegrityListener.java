@@ -19,6 +19,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 /**
  * An EventListener used to ensure data integrity.
  *
+ * @see IntegrityEvent
  */
 @Component
 @Singleton
@@ -62,7 +63,7 @@ public class IntegrityListener implements EventListener {
     XWikiDocument document = (XWikiDocument) sourceDocument;
 
     // PersonClass update
-    if (document.getXObject(Person.getClassReference(document)) != null) {
+    if (document.getXObject(Person.CLASS_REFERENCE) != null) {
       if (!bibliographyService.getEntryReferencingAPerson(document.getDocumentReference().toString()).isEmpty()) {
         ((DocumentDeletingEvent) event).cancel();
       }

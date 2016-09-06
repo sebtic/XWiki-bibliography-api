@@ -27,7 +27,7 @@ public class DateFieldProvider extends FieldProvider<CSLDateFields> {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.projectsforge.xwiki.bibliography.FieldProvider#convert(org.
    * projectsforge.xwiki.bibliography.BibliographyService,
    * de.undercouch.citeproc.csl.CSLItemDataBuilder, java.util.Map)

@@ -23,10 +23,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
@@ -41,14 +39,17 @@ import org.projectsforge.xwiki.bibliography.fields.CSLDateFields;
 import org.projectsforge.xwiki.bibliography.fields.CSLNameFields;
 import org.projectsforge.xwiki.bibliography.fields.CSLStringFields;
 import org.projectsforge.xwiki.bibliography.mapping.Configuration;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker;
 import org.projectsforge.xwiki.bibliography.mapping.Entry;
 import org.projectsforge.xwiki.bibliography.mapping.Index;
 import org.projectsforge.xwiki.bibliography.mapping.LocalIndex;
 import org.projectsforge.xwiki.bibliography.mapping.Person;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
@@ -75,27 +76,34 @@ import de.undercouch.citeproc.csl.CSLName;
 @Component
 public class DefaultBibliographyService implements BibliographyService {
 
+  /** The Constant DOCUMENT_WALKER. */
+  private static final String DOCUMENT_WALKER = "bibliography-document-walker";
+
   /** The id regex. */
   private static Pattern ID_REGEX = Pattern.compile("^[a-zA-Z\\.0-9:\\-_]{2,50}$");
 
-  /** The logger. */
-  @Inject
-  private Logger logger;
+  /** The Constant XWIKI_GROUPS_CLASS. */
+  private static final EntityReference XWIKI_GROUPS_CLASS = new EntityReference("XWikiGroups", EntityType.DOCUMENT,
+      new EntityReference("XWiki", EntityType.SPACE));
 
-  /** The document reference resolver. */
-  @Inject
-  private DocumentReferenceResolver<String> documentReferenceResolver;
-
-  /** The query manager. */
-  @Inject
-  private QueryManager queryManager;
+  /** The biblatex importer. */
+  private BibLaTeXImporter biblatexImporter = new BibLaTeXImporter();
 
   /** The context provider. */
   @Inject
   private Provider<XWikiContext> contextProvider;
 
-  /** The biblatex importer. */
-  private BibLaTeXImporter biblatexImporter = new BibLaTeXImporter();
+  /** The document reference resolver. */
+  @Inject
+  private DocumentReferenceResolver<String> documentReferenceResolver;
+
+  /** The logger. */
+  @Inject
+  private Logger logger;
+
+  /** The query manager. */
+  @Inject
+  private QueryManager queryManager;
 
   /** The wiki descriptor manager. */
   @Inject
@@ -148,21 +156,10 @@ public class DefaultBibliographyService implements BibliographyService {
       return null;
     }
 
-    XWikiContext context = getContext();
-    XWiki xwiki = context.getWiki();
-    DocumentReference docRef = getNewEntryReference();
-    XWikiDocument document;
-    try {
-      document = xwiki.getDocument(docRef, context);
-    } catch (XWikiException ex) {
-      addError(Error.XWIKI_GET_DOCUMENT, docRef);
-      logger.warn("An error occurred while creating entry", ex);
-      return null;
-    }
-    Entry entry = new Entry(this, document);
+    Entry entry = getDocumentWalker().getNode(getNewEntryReference()).wrapAsEntry();
     entry.fillFromCSLObject(authorReference, data);
-    entry.save(authorReference);
-    return document.getDocumentReference();
+    entry.getNode().save();
+    return entry.getNode().getDocumentReference();
 
   }
 
@@ -174,36 +171,30 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public synchronized DocumentReference createPersonFromCSLName(DocumentReference authorReference, CSLName name) {
-    XWikiContext context = getContext();
-    XWiki xwiki = context.getWiki();
-    DocumentReference docRef = getNewPersonReference();
-    XWikiDocument document;
-    try {
-      document = xwiki.getDocument(docRef, context);
-    } catch (XWikiException ex) {
-      addError(Error.XWIKI_GET_DOCUMENT, docRef);
-      logger.warn("An error occurred while creating person", ex);
-      return null;
-    }
-    Person person = new Person(this, document);
+    Person person = getDocumentWalker().getNode(getNewPersonReference()).wrapAsPerson();
     person.fillFromCSLObject(name);
-    person.save(authorReference);
-    return document.getDocumentReference();
+    person.getNode().save();
+    return person.getNode().getDocumentReference();
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.projectsforge.xwiki.bibliography.service.BibliographyService#
+   * ensureRequirements()
+   */
   @Override
   public void ensureRequirements() {
     XWikiContext context = getContext();
     XWiki wiki = context.getWiki();
-
-    DocumentReference xwikiGroupsRef = new DocumentReference(context.getWikiId(), "XWiki", "XWikiGroups");
 
     DocumentReference adminGroupRef = new DocumentReference(context.getWikiId(), "XWiki", "BibliographyAdminGroup");
     if (!wiki.exists(adminGroupRef, context)) {
       // the group does not exist, then we need to create it
       try {
         XWikiDocument adminGroupDoc = wiki.getDocument(adminGroupRef, context);
-        adminGroupDoc.newXObject(xwikiGroupsRef, context);
+        adminGroupDoc.setHidden(true);
+        adminGroupDoc.newXObject(XWIKI_GROUPS_CLASS, context);
         wiki.saveDocument(adminGroupDoc, context);
       } catch (XWikiException ex) {
         logger.warn("An error occurred", ex);
@@ -223,13 +214,7 @@ public class DefaultBibliographyService implements BibliographyService {
   public Entry findEntry(Index index, String key) {
     DocumentReference docRef = findEntryReference(index, key);
     if (docRef != null) {
-      XWikiContext context = getContext();
-      try {
-        return new Entry(this, context.getWiki().getDocument(docRef, context));
-      } catch (XWikiException ex) {
-        logger.warn("Can not load entry", ex);
-        addError(Error.XWIKI_GET_DOCUMENT, docRef);
-      }
+      return getDocumentWalker().getNode(docRef).wrapAsEntry();
     }
     return null;
   }
@@ -243,8 +228,8 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public DocumentReference findEntryReference(Index index, String key) {
-    DocumentReference reference = findEntryReferenceOnWiki(
-        index.getDocument().getDocumentReference().getWikiReference(), key);
+    DocumentReference reference = findEntryReferenceOnWiki(index.getNode().getDocumentReference().getWikiReference(),
+        key);
     if (reference != null) {
       return reference;
     }
@@ -259,12 +244,19 @@ public class DefaultBibliographyService implements BibliographyService {
     return reference;
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.projectsforge.xwiki.bibliography.service.BibliographyService#
+   * findEntryReferenceOnWiki(org.xwiki.model.reference.WikiReference,
+   * java.lang.String)
+   */
   @Override
   public DocumentReference findEntryReferenceOnWiki(WikiReference wikiReference, String key) {
     try {
       Query query = queryManager
           .createQuery(
-              String.format("from doc.object(%s) as entry where entry.id = :key", Entry.getClassReferenceAsString()),
+              String.format("from doc.object(%s) as entry where entry.id = :key", Entry.CLASS_REFERENCE_AS_STRING),
               Query.XWQL)
           .bindValue("key", StringUtils.trim(key)).setWiki(StringUtils.defaultIfBlank(wikiReference.getName(), null))
           .setLimit(1);
@@ -286,48 +278,6 @@ public class DefaultBibliographyService implements BibliographyService {
   /*
    * (non-Javadoc)
    *
-   * @see
-   * org.projectsforge.xwiki.bibliography.BibliographyService#findIndex(com.xpn.
-   * xwiki.doc.XWikiDocument)
-   */
-  @Override
-  public Index findIndex(XWikiDocument document) {
-    Set<DocumentReference> visited = new HashSet<>();
-    XWikiDocument curDoc = document;
-    XWikiContext context = getContext();
-    XWiki xwiki = context.getWiki();
-
-    visited.add(document.getDocumentReference());
-    while (true) {
-      if (curDoc.getXObject(Index.getClassReference(document)) != null) {
-        // index found
-        return new Index(this, curDoc);
-      }
-
-      // recurse to parent
-      DocumentReference parentRef = curDoc.getParentReference();
-      if (parentRef == null) {
-        // there is no parent
-        return null;
-      }
-      // protect against loop
-      if (visited.contains(parentRef)) {
-        return null;
-      } else {
-        visited.add(parentRef);
-      }
-      try {
-        curDoc = xwiki.getDocument(parentRef, context);
-      } catch (XWikiException ex) {
-        addError(Error.XWIKI_GET_DOCUMENT, parentRef);
-        return null;
-      }
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   *
    * @see org.projectsforge.xwiki.bibliography.service.BibliographyService#
    * findPersonFromCSLNameOnWiki(org.xwiki.model.reference.WikiReference,
    * de.undercouch.citeproc.csl.CSLName)
@@ -340,7 +290,7 @@ public class DefaultBibliographyService implements BibliographyService {
               "from doc.object(%s) as person where " + "person.family = :family and " + "person.given = :given and "
                   + "person.droppingParticle = :droppingParticle and "
                   + "person.nonDroppingParticle = :nonDroppingParticle and " + "person.suffix = :suffix",
-              Person.getClassReferenceAsString()), Query.XWQL)
+              Person.CLASS_REFERENCE_AS_STRING), Query.XWQL)
           .bindValue("family", StringUtils.defaultString(name.getFamily()))
           .bindValue("given", StringUtils.defaultString(name.getGiven()))
           .bindValue("droppingParticle", StringUtils.defaultString(name.getDroppingParticle()))
@@ -414,15 +364,9 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public Configuration getDefaultConfiguration(WikiReference wikiReference) {
-    try {
-      XWikiContext context = getContext();
-      XWikiDocument document = context.getWiki().getDocument(Configuration.getConfigurationPageReference(wikiReference),
-          context);
-      return new Configuration(this, document);
-    } catch (XWikiException ex) {
-      logger.warn("Can not load configuration", ex);
-      throw new IllegalStateException("Can not load configuration", ex);
-    }
+    DocumentReference docRef = new DocumentReference(wikiReference.getName(),
+        Constants.CONFIGURATION_SPACE_NAME_AS_LIST, "Configuration");
+    return getDocumentWalker().getNode(docRef).wrapAsConfiguration();
   }
 
   /*
@@ -433,8 +377,6 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public Map<String, List<DocumentReference>> getDocumentReferencingEntry(String entryId) {
-    XWikiContext context = getContext();
-    XWiki wiki = context.getWiki();
     Map<String, List<DocumentReference>> results = new HashMap<>();
     try {
       for (String wikiId : wikiDescriptorManager.getAllIds()) {
@@ -442,17 +384,18 @@ public class DefaultBibliographyService implements BibliographyService {
         List<DocumentReference> referencing = new ArrayList<>();
 
         List<String> docs = queryManager
-            .createQuery(String.format("from doc.object(%s) as localindex", LocalIndex.getClassReferenceAsString()),
+            .createQuery(String.format("from doc.object(%s) as localindex", LocalIndex.CLASS_REFERENCE_AS_STRING),
                 Query.XWQL)
             .setWiki(wikiId).execute();
         if (docs == null) {
           docs = Collections.emptyList();
         }
 
+        DocumentWalker documentWalker = getDocumentWalker();
+
         for (String docId : docs) {
           DocumentReference docRef = documentReferenceResolver.resolve(docId, wikiReference);
-          XWikiDocument doc = wiki.getDocument(docRef, context);
-          List<String> keys = new LocalIndex(this, doc, null).getKeys();
+          List<String> keys = documentWalker.getNode(docRef).wrapAsLocalIndex(null).getKeys();
           if (keys.contains(entryId) && !referencing.contains(docRef)) {
             referencing.add(docRef);
           }
@@ -461,7 +404,7 @@ public class DefaultBibliographyService implements BibliographyService {
           results.put(wikiId, referencing);
         }
       }
-    } catch (XWikiException | WikiManagerException | QueryException ex) {
+    } catch (WikiManagerException | QueryException ex) {
       logger.warn("An error occurred", ex);
     }
     return results;
@@ -470,56 +413,17 @@ public class DefaultBibliographyService implements BibliographyService {
   /*
    * (non-Javadoc)
    *
-   * @see
-   * org.projectsforge.xwiki.bibliography.BibliographyService#getEntries(org.
-   * projectsforge.xwiki.bibliography.Index)
-   */
-  @Override
-  public List<SortableDocumentReference> getEntries(Index index) {
-    WikiReference wikiReference = index.getDocument().getDocumentReference().getWikiReference();
-    List<SortableDocumentReference> results = getEntriesOnWiki(wikiReference);
-    for (String wikiName : index.getExtraWikiSources()) {
-      if (StringUtils.isNotBlank(wikiName)) {
-        wikiReference = new WikiReference(wikiName);
-        results.addAll(getEntriesOnWiki(wikiReference));
-      }
-    }
-    Collections.sort(results);
-    return results;
-  }
-
-  /*
-   * (non-Javadoc)
-   *
    * @see org.projectsforge.xwiki.bibliography.service.BibliographyService#
-   * getEntriesOnWiki(org.xwiki.model.reference.WikiReference)
+   * getDocumentWalker()
    */
   @Override
-  public List<SortableDocumentReference> getEntriesOnWiki(WikiReference wikiReference) {
-    List<SortableDocumentReference> entries = new ArrayList<>();
+  public synchronized DocumentWalker getDocumentWalker() {
     XWikiContext context = getContext();
-    XWiki xwiki = context.getWiki();
-    List<String> results = null;
-    try {
-      results = queryManager
-          .createQuery(String.format("from doc.object(%s) as entry", Entry.getClassReferenceAsString()), Query.XWQL)
-          .setWiki(wikiReference.getName()).execute();
-    } catch (QueryException ex) {
-      logger.warn("An error occurred while executing query ", ex);
+    DocumentWalker result = (DocumentWalker) context.get(DOCUMENT_WALKER);
+    if (result == null) {
+      result = new DocumentWalker(this, documentReferenceResolver, queryManager);
     }
-    if (results == null) {
-      results = Collections.emptyList();
-    }
-    for (String result : results) {
-      DocumentReference docRef = documentReferenceResolver.resolve(result, wikiReference);
-      try {
-        XWikiDocument doc = xwiki.getDocument(docRef, context);
-        entries.add(new SortableDocumentReference(doc.getTitle(), docRef));
-      } catch (XWikiException ex) {
-        addError(Error.XWIKI_GET_DOCUMENT, docRef);
-      }
-    }
-    return entries;
+    return result;
   }
 
   /*
@@ -532,7 +436,6 @@ public class DefaultBibliographyService implements BibliographyService {
   public Map<String, List<DocumentReference>> getEntryReferencingAPerson(String personRef) {
 
     XWikiContext context = getContext();
-    XWiki wiki = context.getWiki();
 
     // ensure the reference is local to the wiki
     String personId = Utils.LOCAL_REFERENCE_SERIALIZER
@@ -546,20 +449,20 @@ public class DefaultBibliographyService implements BibliographyService {
         List<DocumentReference> referencing = new ArrayList<>();
 
         List<String> entries = queryManager
-            .createQuery(String.format("from doc.object(%s) as entry", Entry.getClassReferenceAsString()), Query.XWQL)
+            .createQuery(String.format("from doc.object(%s) as entry", Entry.CLASS_REFERENCE_AS_STRING), Query.XWQL)
             .setWiki(wikiId).execute();
         if (entries == null) {
           entries = Collections.emptyList();
         }
 
         for (String entryId : entries) {
-          DocumentReference entryRef = documentReferenceResolver.resolve(entryId, wikiReference);
-          XWikiDocument entryDoc = wiki.getDocument(entryRef, context);
-          BaseObject xobject = entryDoc.getXObject(Entry.getClassReference(entryDoc));
+          Entry entry = getDocumentWalker().getNode(documentReferenceResolver.resolve(entryId, wikiReference))
+              .wrapAsEntry();
 
           for (CSLNameFields field : CSLNameFields.values()) {
-            if (field.decode(xobject).contains(personId) && !referencing.contains(entryRef)) {
-              referencing.add(entryRef);
+            if (field.decode(entry).contains(personId)
+                && !referencing.contains(entry.getNode().getDocumentReference())) {
+              referencing.add(entry.getNode().getDocumentReference());
             }
           }
         }
@@ -567,23 +470,11 @@ public class DefaultBibliographyService implements BibliographyService {
           results.put(wikiId, referencing);
         }
       }
-    } catch (XWikiException | WikiManagerException | QueryException ex) {
+    } catch (WikiManagerException | QueryException ex) {
       logger.warn("An error occurred", ex);
     }
     return results;
   }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.projectsforge.xwiki.bibliography.service.BibliographyService#
-   * getLocalIndex(com.xpn.xwiki.XWikiContext, com.xpn.xwiki.doc.XWikiDocument,
-   * org.projectsforge.xwiki.bibliography.mapping.Index)
-   */
-  /*
-   * @Override public LocalIndex getLocalIndex(XWikiDocument document, Index
-   * index) { return new LocalIndex(this, document, index); }
-   */
 
   /*
    * (non-Javadoc)
@@ -664,7 +555,7 @@ public class DefaultBibliographyService implements BibliographyService {
     List<String> results = null;
     try {
       results = queryManager
-          .createQuery(String.format("from doc.object(%s) as entry", Entry.getClassReferenceAsString()), Query.XWQL)
+          .createQuery(String.format("from doc.object(%s) as entry", Entry.CLASS_REFERENCE_AS_STRING), Query.XWQL)
           .setWiki(context.getWikiId()).execute();
     } catch (QueryException ex) {
       addError(Error.QUERY, ex.getMessage());
@@ -702,7 +593,7 @@ public class DefaultBibliographyService implements BibliographyService {
     List<String> results = null;
     try {
       results = queryManager
-          .createQuery(String.format("from doc.object(%s) as person", Person.getClassReferenceAsString()), Query.XWQL)
+          .createQuery(String.format("from doc.object(%s) as person", Person.CLASS_REFERENCE_AS_STRING), Query.XWQL)
           .setWiki(context.getWikiId()).execute();
     } catch (QueryException ex) {
       addError(Error.QUERY, ex.getMessage());
@@ -736,19 +627,7 @@ public class DefaultBibliographyService implements BibliographyService {
    * @return the person
    */
   public Person getPerson(DocumentReference personRef) {
-    try {
-      XWikiContext context = getContext();
-      XWikiDocument personDoc = context.getWiki().getDocument(personRef, context);
-      if (personDoc.isNew()) {
-        return null;
-      } else {
-        return new Person(this, personDoc);
-      }
-    } catch (XWikiException ex) {
-      addError(Error.XWIKI_GET_DOCUMENT, personRef);
-      logger.warn("Can not load Person object", ex);
-      return null;
-    }
+    return getDocumentWalker().getNode(personRef).wrapIfPerson();
   }
 
   /*
@@ -784,39 +663,37 @@ public class DefaultBibliographyService implements BibliographyService {
       if (!wiki.exists(destinationRef, context)) {
         return false;
       }
-      XWikiDocument destinationDoc = wiki.getDocument(destinationRef, context);
-      if (destinationDoc != null && destinationDoc.getXObject(Entry.getClassReference(destinationDoc)) != null) {
+      if (getDocumentWalker().getNode(destinationRef).getXObject(Entry.CLASS_REFERENCE) == null) {
         return false;
       }
 
       List<String> entries = queryManager
-          .createQuery(String.format("from doc.object(%s) as entry", Entry.getClassReferenceAsString()), Query.XWQL)
+          .createQuery(String.format("from doc.object(%s) as entry", Entry.CLASS_REFERENCE_AS_STRING), Query.XWQL)
           .setWiki(context.getWikiId()).execute();
       if (entries == null) {
         entries = Collections.emptyList();
       }
 
       for (String entryId : entries) {
-        DocumentReference entryRef = documentReferenceResolver.resolve(entryId, context.getWikiReference());
-        XWikiDocument entryDoc = wiki.getDocument(entryRef, context);
-        BaseObject xobject = entryDoc.getXObject(Entry.getClassReference(entryDoc));
+        Entry entry = getDocumentWalker()
+            .getNode(documentReferenceResolver.resolve(entryId, context.getWikiReference())).wrapAsEntry();
         boolean dirty = false;
 
         for (CSLNameFields field : CSLNameFields.values()) {
-          List<String> persons = field.decode(xobject);
+          List<String> persons = field.decode(entry);
           int index = persons.indexOf(source);
           if (index != -1) {
             persons.set(index, destination);
-            field.encode(xobject, persons);
+            field.encode(entry, persons);
             dirty = true;
           }
         }
         if (dirty) {
-          wiki.saveDocument(entryDoc, context);
+          entry.getNode().save();
         }
       }
       return true;
-    } catch (XWikiException | QueryException ex) {
+    } catch (QueryException ex) {
       logger.warn("An error occurred", ex);
       return false;
     }
@@ -842,7 +719,7 @@ public class DefaultBibliographyService implements BibliographyService {
    */
   @Override
   public String validateEntry(XWikiDocument doc) {
-    BaseObject xobject = doc.getXObject(Entry.getClassReference(doc), true, getContext());
+    BaseObject xobject = doc.getXObject(Entry.CLASS_REFERENCE, true, getContext());
     // check for non duplicate id on the current wiki
     String id = xobject.getStringValue(CSLStringFields.ID.toString());
 
@@ -884,4 +761,5 @@ public class DefaultBibliographyService implements BibliographyService {
     logger.debug("validateEntryId '{}' OK", id);
     return null;
   }
+
 }

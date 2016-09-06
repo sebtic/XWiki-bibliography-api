@@ -8,6 +8,7 @@ import org.projectsforge.xwiki.bibliography.mapping.Configuration;
 import org.projectsforge.xwiki.bibliography.mapping.Entry;
 import org.projectsforge.xwiki.bibliography.mapping.Index;
 import org.projectsforge.xwiki.bibliography.mapping.Person;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.model.reference.DocumentReference;
@@ -20,6 +21,7 @@ import de.undercouch.citeproc.CSL;
 import de.undercouch.citeproc.csl.CSLItemData;
 import de.undercouch.citeproc.csl.CSLName;
 
+// TODO: Auto-generated Javadoc
 /**
  * Interface (aka Role) of the Component.
  */
@@ -102,15 +104,6 @@ public interface BibliographyService {
   DocumentReference findEntryReferenceOnWiki(WikiReference wikiReference, String key);
 
   /**
-   * Find index.
-   *
-   * @param document
-   *          the document
-   * @return the index
-   */
-  Index findIndex(XWikiDocument document);
-
-  /**
    * Find person from CSL name.
    *
    * @param wikiReference
@@ -158,22 +151,11 @@ public interface BibliographyService {
   Map<String, List<DocumentReference>> getDocumentReferencingEntry(String entryId);
 
   /**
-   * Gets the entries.
+   * Gets the document walker.
    *
-   * @param index
-   *          the index
-   * @return the entries
+   * @return the document walker
    */
-  List<SortableDocumentReference> getEntries(Index index);
-
-  /**
-   * Gets the entries on wiki.
-   *
-   * @param wikiReference
-   *          the wiki reference
-   * @return the entries on wiki
-   */
-  List<SortableDocumentReference> getEntriesOnWiki(WikiReference wikiReference);
+  DocumentWalker getDocumentWalker();
 
   /**
    * Gets the entry referencing a person on all wikis.

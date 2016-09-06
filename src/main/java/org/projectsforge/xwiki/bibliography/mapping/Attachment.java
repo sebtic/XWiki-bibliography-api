@@ -1,59 +1,29 @@
 package org.projectsforge.xwiki.bibliography.mapping;
 
 import org.projectsforge.xwiki.bibliography.Constants;
-import org.projectsforge.xwiki.bibliography.service.BibliographyService;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker.Node;
 import org.xwiki.model.EntityType;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
-
-import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
  * The Class Annotation.
  */
 public class Attachment extends RestrictedAccessClass {
 
-  /**
-   * Gets the class reference.
-   *
-   * @param entityReference
-   *          the entity reference
-   * @return the class reference
-   */
-  public static DocumentReference getClassReference(EntityReference entityReference) {
-    return new DocumentReference(entityReference.extractReference(EntityType.WIKI).getName(),
-        Constants.CODE_SPACE_NAME_AS_LIST, "AttachmentClass");
-  }
+  /** The Constant CLASS_REFERENCE. */
+  public static final EntityReference CLASS_REFERENCE = new EntityReference("AttachmentClass", EntityType.DOCUMENT,
+      Constants.CODE_SPACE_REFERENCE);
+
+  /** The Constant CLASS_REFERENCE_AS_STRING. */
+  public static final String CLASS_REFERENCE_AS_STRING = Constants.CODE_SPACE_NAME_AS_STRING + ".AttachmentClass";
 
   /**
-   * Gets the class reference.
+   * Instantiates a new attachment.
    *
-   * @param document
-   *          the document
-   * @return the class reference
+   * @param node
+   *          the node
    */
-  public static DocumentReference getClassReference(XWikiDocument document) {
-    return getClassReference(document.getDocumentReference());
-  }
-
-  /**
-   * Gets the class reference as string.
-   *
-   * @return the class reference as string
-   */
-  public static Object getClassReferenceAsString() {
-    return Constants.CODE_SPACE_NAME_AS_STRING + ".AttachmentClass";
-  }
-
-  /**
-   * Instantiates a new annotation.
-   *
-   * @param service
-   *          the service
-   * @param document
-   *          the document
-   */
-  public Attachment(BibliographyService service, XWikiDocument document) {
-    super(service, document, document.getXObject(getClassReference(document), true, service.getContext()));
+  public Attachment(Node node) {
+    super(node, CLASS_REFERENCE);
   }
 }

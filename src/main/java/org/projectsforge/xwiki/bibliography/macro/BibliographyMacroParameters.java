@@ -36,6 +36,11 @@ public class BibliographyMacroParameters {
     this.scope = scope;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return "BibliographyMacroParameters [scope=" + scope + "]";

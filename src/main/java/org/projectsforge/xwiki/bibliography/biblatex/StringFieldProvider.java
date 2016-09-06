@@ -26,7 +26,7 @@ public class StringFieldProvider extends FieldProvider<CSLStringFields> {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.projectsforge.xwiki.bibliography.FieldProvider#convert(org.
    * projectsforge.xwiki.bibliography.BibliographyService,
    * de.undercouch.citeproc.csl.CSLItemDataBuilder, java.util.Map)

@@ -8,10 +8,11 @@ import org.xwiki.model.reference.WikiReference;
  */
 public class ConfigurationUpdatedJobRequest extends AbstractRequest {
 
-  private static final long serialVersionUID = 1L;
-
   /** The Constant PROPERTY_WIKI_REFERENCE. */
   private static final String PROPERTY_WIKI_REFERENCE = "wikiReference";
+
+  /** The Constant serialVersionUID. */
+  private static final long serialVersionUID = 1L;
 
   /**
    * Gets the wiki reference.

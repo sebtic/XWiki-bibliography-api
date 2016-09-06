@@ -121,17 +121,17 @@ public enum CSLStringFields {
     return null;
   }
 
-  /** The setter. */
-  private BiConsumer<CSLItemDataBuilder, String> setter;
-
-  /** The name. */
-  private String name;
+  /** The getter. */
+  private Function<CSLItemData, String> getter;
 
   /** The large. */
   private boolean large;
 
-  /** The getter. */
-  private Function<CSLItemData, String> getter;
+  /** The name. */
+  private String name;
+
+  /** The setter. */
+  private BiConsumer<CSLItemDataBuilder, String> setter;
 
   /**
    * Instantiates a new CSL string fields.
@@ -242,7 +242,7 @@ public enum CSLStringFields {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Enum#toString()
    */
   @Override

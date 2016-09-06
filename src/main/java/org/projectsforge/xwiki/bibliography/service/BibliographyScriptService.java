@@ -8,6 +8,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.projectsforge.xwiki.bibliography.Error;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker;
 import org.projectsforge.xwiki.bibliography.mapping.Index;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
@@ -110,25 +111,12 @@ public class BibliographyScriptService implements ScriptService {
   }
 
   /**
-   * Gets the entries.
+   * Gets the document walker.
    *
-   * @param index
-   *          the index
-   * @return the entries
+   * @return the document walker
    */
-  public List<SortableDocumentReference> getEntries(Index index) {
-    return service.getEntries(index);
-  }
-
-  /**
-   * Gets the entries on wiki.
-   *
-   * @param wikiReference
-   *          the wiki reference
-   * @return the entries on wiki
-   */
-  public List<SortableDocumentReference> getEntriesOnWiki(WikiReference wikiReference) {
-    return service.getEntriesOnWiki(wikiReference);
+  public DocumentWalker getDocumentWalker() {
+    return service.getDocumentWalker();
   }
 
   /**

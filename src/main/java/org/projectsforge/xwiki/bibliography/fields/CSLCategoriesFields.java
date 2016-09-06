@@ -36,14 +36,14 @@ public enum CSLCategoriesFields {
     return null;
   }
 
-  /** The setter. */
-  private BiConsumer<CSLItemDataBuilder, String[]> setter;
+  /** The getter. */
+  private Function<CSLItemData, String[]> getter;
 
   /** The name. */
   private String name;
 
-  /** The getter. */
-  private Function<CSLItemData, String[]> getter;
+  /** The setter. */
+  private BiConsumer<CSLItemDataBuilder, String[]> setter;
 
   /**
    * Instantiates a new CSL categories fields.

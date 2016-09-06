@@ -4,18 +4,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.projectsforge.xwiki.bibliography.Constants;
-import org.projectsforge.xwiki.bibliography.Error;
 import org.projectsforge.xwiki.bibliography.Utils;
-import org.projectsforge.xwiki.bibliography.service.BibliographyService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker.Node;
 import org.xwiki.model.EntityType;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 
 /**
@@ -23,8 +16,12 @@ import com.xpn.xwiki.objects.BaseObject;
  */
 public class LocalIndex {
 
-  /** The logger. */
-  private static Logger logger = LoggerFactory.getLogger(LocalIndex.class);
+  /** The Constant CLASS_REFERENCE. */
+  public static final EntityReference CLASS_REFERENCE = new EntityReference("LocalIndexClass", EntityType.DOCUMENT,
+      Constants.CODE_SPACE_REFERENCE);
+
+  /** The Constant CLASS_REFERENCE_AS_STRING. */
+  public static final String CLASS_REFERENCE_AS_STRING = Constants.CODE_SPACE_NAME_AS_STRING + ".LocalIndexClass";
 
   /** The Constant FIELD_IS_BIBLIOGRAPHY_PAGE. */
   public static final String FIELD_IS_BIBLIOGRAPHY_PAGE = "isBibliographyPage";
@@ -32,49 +29,11 @@ public class LocalIndex {
   /** The Constant FIELD_KEYS. */
   public static final String FIELD_KEYS = "keys";
 
-  /**
-   * Gets the class reference.
-   *
-   * @param entityReference
-   *          the entity reference
-   * @return the class reference
-   */
-  public static DocumentReference getClassReference(EntityReference entityReference) {
-    return new DocumentReference(entityReference.extractReference(EntityType.WIKI).getName(),
-        Constants.CODE_SPACE_NAME_AS_LIST, "LocalIndexClass");
-  }
-
-  /**
-   * Gets the class reference.
-   *
-   * @param document
-   *          the document
-   * @return the class reference
-   */
-  public static DocumentReference getClassReference(XWikiDocument document) {
-    return getClassReference(document.getDocumentReference());
-  }
-
-  /**
-   * Gets the class reference as string.
-   *
-   * @return the class reference as string
-   */
-  public static Object getClassReferenceAsString() {
-    return Constants.CODE_SPACE_NAME_AS_STRING + ".LocalIndexClass";
-  }
-
-  /** The xobject. */
-  private BaseObject xobject;
-
-  /** The document. */
-  private XWikiDocument document;
+  /** The dirty. */
+  private boolean dirty;
 
   /** The index. */
   private Index index;
-
-  /** The service. */
-  private BibliographyService service;
 
   /** The is bibliography page. */
   private Boolean isBibliographyPage;
@@ -82,28 +41,28 @@ public class LocalIndex {
   /** The keys. */
   private List<String> keys;
 
-  /** The dirty. */
-  private boolean dirty;
+  /** The node. */
+  private Node node;
+
+  /** The xobject. */
+  private BaseObject xobject;
 
   /**
    * Instantiates a new local index.
    *
-   * @param service
-   *          the service
-   * @param document
-   *          the document
+   * @param node
+   *          the node
    * @param index
    *          the index
    */
-  public LocalIndex(BibliographyService service, XWikiDocument document, Index index) {
-    this.service = service;
-    this.document = document;
-    this.xobject = document.getXObject(getClassReference(document));
+  public LocalIndex(Node node, Index index) {
+    this.node = node;
+    this.xobject = node.getXObject(CLASS_REFERENCE);
     this.index = index;
 
     if (xobject != null) {
       this.isBibliographyPage = xobject.getIntValue(FIELD_IS_BIBLIOGRAPHY_PAGE) == 1;
-      this.keys = Utils.deserializeKeys(service, xobject.getLargeStringValue(FIELD_KEYS));
+      this.keys = Utils.deserializeKeys(node.getService(), xobject.getLargeStringValue(FIELD_KEYS));
     } else {
       isBibliographyPage = Boolean.FALSE;
       this.keys = Collections.emptyList();
@@ -133,28 +92,22 @@ public class LocalIndex {
    * Save.
    */
   public void save() {
-    try {
-      if (dirty) {
-        XWikiContext context = service.getContext();
-        if (keys.isEmpty() && !isBibliographyPage) {
-          // the local index is no more necessary => remove it
-          document.removeXObject(xobject);
-        } else {
-          if (xobject == null) {
-            xobject = document.newXObject(getClassReference(document), context);
-          }
-          xobject.setIntValue(FIELD_IS_BIBLIOGRAPHY_PAGE, isBibliographyPage ? 1 : 0);
-          xobject.setLargeStringValue(FIELD_KEYS, Utils.serializeKeys(service, keys));
+    if (dirty) {
+      if (keys.isEmpty() && !isBibliographyPage) {
+        // the local index is no more necessary => remove it
+        node.removeXObjects(CLASS_REFERENCE);
+      } else {
+        if (xobject == null) {
+          xobject = node.newXObject(CLASS_REFERENCE);
         }
-        context.getWiki().saveDocument(document, context);
-        // IndexUpdaterListener is triggered so index is marked as dirty
-        if (index != null) {
-          index.setExpired(true);
-        }
+        xobject.setIntValue(FIELD_IS_BIBLIOGRAPHY_PAGE, isBibliographyPage ? 1 : 0);
+        xobject.setLargeStringValue(FIELD_KEYS, Utils.serializeKeys(node.getService(), keys));
       }
-    } catch (XWikiException ex) {
-      service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
-      logger.warn("Failed saving document", ex);
+      node.save();
+      // IndexUpdaterListener is triggered so index is marked as dirty
+      if (index != null) {
+        index.setExpired(true);
+      }
     }
   }
 
@@ -191,7 +144,6 @@ public class LocalIndex {
    */
   @Override
   public String toString() {
-    return "LocalIndex [document=" + document.getDocumentReference() + ", xobject=" + xobject + ", index=" + index
-        + "]";
+    return "LocalIndex [document=" + node.getDocumentReference() + ", xobject=" + xobject + ", index=" + index + "]";
   }
 }

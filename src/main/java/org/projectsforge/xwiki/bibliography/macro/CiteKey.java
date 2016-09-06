@@ -94,6 +94,11 @@ public class CiteKey {
     return locator;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return "CiteKey [key=" + key + ", locator=" + locator + "]";

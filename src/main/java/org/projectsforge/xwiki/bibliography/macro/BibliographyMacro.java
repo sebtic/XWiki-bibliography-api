@@ -14,6 +14,7 @@ import javax.inject.Provider;
 
 import org.apache.commons.lang3.StringUtils;
 import org.projectsforge.xwiki.bibliography.Constants;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker.Node;
 import org.projectsforge.xwiki.bibliography.mapping.Index;
 import org.projectsforge.xwiki.bibliography.mapping.LocalIndex;
 import org.projectsforge.xwiki.bibliography.service.BibliographyService;
@@ -39,6 +40,7 @@ import de.undercouch.citeproc.csl.CSLCitationItem;
 import de.undercouch.citeproc.output.Bibliography;
 import de.undercouch.citeproc.output.Citation;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class BibliographyMacro.
  */
@@ -52,26 +54,27 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
   /** The Constant MACRO_NAME. */
   public static final String MACRO_NAME = "bibliography";
 
-  /** The Constant WYSIWYG_NAME. */
-  public static final String WYSIWYG_NAME = "Print the bibliography";
-
   /** The Constant MACRO_BLOCK_MATCHER. */
   public static final MacroBlockMatcher MACRO_BLOCK_MATCHER = new MacroBlockMatcher(MACRO_NAME);
+
+  /** The Constant WYSIWYG_NAME. */
+  public static final String WYSIWYG_NAME = "Print the bibliography";
 
   /** The logger. */
   @Inject
   private Logger logger;
 
-  /** The xwiki context provider. */
+  /** The macro content parser. */
   @Inject
-  private Provider<XWikiContext> xwikiContextProvider;
+  private MacroContentParser macroContentParser;
 
   /** The bibliography service. */
   @Inject
   private BibliographyService service;
 
+  /** The xwiki context provider. */
   @Inject
-  private MacroContentParser macroContentParser;
+  private Provider<XWikiContext> xwikiContextProvider;
 
   /**
    * Create and initialize the descriptor of the macro.
@@ -134,11 +137,13 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
 
     /**** UPDATE LOCAL INDEX ****/
 
+    Node node = service.getDocumentWalker().wrapNode(document);
+
     // Find global index for overrided configuration
-    Index index = service.findIndex(document);
+    Index index = node.getRootNode().wrapIfIndex();
 
     // load local index
-    LocalIndex localIndex = new LocalIndex(service, document, index);
+    LocalIndex localIndex = node.wrapAsLocalIndex(index);
 
     // decode and save local keys
     localIndex.setKeys(CiteKey.decodeUniqueKeys(allKeys.toString()));
@@ -162,7 +167,7 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
     localIndex.save();
 
     /**** RELOAD INDEX (to get the last updates) ****/
-    index = service.findIndex(document);
+    index = service.getDocumentWalker().wrapNode(document).getRootNode().wrapIfIndex();
 
     /**** GENERATE CONTENT ****/
     List<Block> results;
@@ -172,7 +177,7 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
     } else {
       // update and save index if necessary
       index.update();
-      index.save();
+      index.getNode().save();
 
       // generate bibliography with all keys
       CSL csl = service.getCSL(index);
@@ -206,12 +211,17 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
   /**
    * Make bibliography blocks.
    *
+   * @param index
+   *          the index
+   * @param bibliography
+   *          the bibliography
+   * @param citedKeys
+   *          the cited keys
    * @param scope
    *          the scope
-   * @param keys
-   *          the keys
    * @return the list
    * @throws MacroExecutionException
+   *           the macro execution exception
    */
   private List<Block> makeBibliographyBlocks(Index index, Bibliography bibliography, List<String> citedKeys,
       Scope scope) throws MacroExecutionException {
@@ -232,7 +242,7 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
         if (lookup.contains(entryIds[i])) {
           String content = entries[i];
           content = content.replaceAll(Constants.ENTRY_TARGET_MARK,
-              service.findEntry(index, entryIds[i]).getDocument().getDocumentReference().toString());
+              service.findEntry(index, entryIds[i]).getNode().getDocumentReference().toString());
           builder.append(content);
         }
       }
@@ -257,6 +267,7 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
    *          the cite
    * @return the list
    * @throws MacroExecutionException
+   *           the macro execution exception
    */
   private List<Block> makeCiteBlocks(Index index, CSL csl, Scope scope, MacroMarkerBlock cite)
       throws MacroExecutionException {
@@ -306,6 +317,17 @@ public class BibliographyMacro extends AbstractMacro<BibliographyMacroParameters
     return results;
   }
 
+  /**
+   * Parses the content.
+   *
+   * @param content
+   *          the content
+   * @param inline
+   *          the inline
+   * @return the xdom
+   * @throws MacroExecutionException
+   *           the macro execution exception
+   */
   private XDOM parseContent(String content, boolean inline) throws MacroExecutionException {
     MacroTransformationContext parserContext = new MacroTransformationContext();
     parserContext.setSyntax(Syntax.XWIKI_2_1);

@@ -20,11 +20,25 @@ import de.undercouch.citeproc.csl.CSLName;
  */
 public class BibLaTeXExporter {
 
-  private static final String BIBLATEX_TYPE = "biblatex-type";
+  /** The Constant BIBLATEX_ID. */
   private static final String BIBLATEX_ID = "id";
 
+  /** The Constant BIBLATEX_TYPE. */
+  private static final String BIBLATEX_TYPE = "biblatex-type";
+
+  /** The logger. */
   private static Logger logger = LoggerFactory.getLogger(BibLaTeXExporter.class);
 
+  /**
+   * Adds the escaped field.
+   *
+   * @param entry
+   *          the entry
+   * @param field
+   *          the field
+   * @param text
+   *          the text
+   */
   private static void addEscapedField(Map<String, String> entry, String field, String text) {
     if (StringUtils.isNotBlank(text)) {
       StringBuilder builder = new StringBuilder();
@@ -41,6 +55,16 @@ public class BibLaTeXExporter {
     }
   }
 
+  /**
+   * Adds the field.
+   *
+   * @param entry
+   *          the entry
+   * @param field
+   *          the field
+   * @param names
+   *          the names
+   */
   private static void addField(Map<String, String> entry, String field, CSLName[] names) {
     StringJoiner allNames = new StringJoiner(" and ");
     if (names != null && names.length > 0) {
@@ -71,6 +95,16 @@ public class BibLaTeXExporter {
     }
   }
 
+  /**
+   * Adds the field.
+   *
+   * @param entry
+   *          the entry
+   * @param field
+   *          the field
+   * @param text
+   *          the text
+   */
   private static void addField(Map<String, String> entry, String field, String text) {
     if (StringUtils.isNotBlank(text)) {
       entry.put(field, text);
@@ -346,6 +380,13 @@ public class BibLaTeXExporter {
     return entry;
   }
 
+  /**
+   * Escape upper and coma.
+   *
+   * @param text
+   *          the text
+   * @return the string
+   */
   private static String escapeUpperAndComa(String text) {
     StringBuilder builder = new StringBuilder();
 

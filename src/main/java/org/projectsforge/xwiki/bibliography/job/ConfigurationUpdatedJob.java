@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 
 import org.apache.commons.lang3.StringUtils;
 import org.projectsforge.xwiki.bibliography.mapping.Entry;
@@ -16,16 +15,11 @@ import org.xwiki.job.AbstractJob;
 import org.xwiki.job.DefaultJobStatus;
 import org.xwiki.job.GroupedJob;
 import org.xwiki.job.JobGroupPath;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
-
-import com.xpn.xwiki.XWiki;
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
  * The Class ConfigurationUpdatedJob.
@@ -50,10 +44,6 @@ public class ConfigurationUpdatedJob
   /** The service. */
   @Inject
   private BibliographyService service;
-
-  /** The context provider. */
-  @Inject
-  private Provider<XWikiContext> contextProvider;
 
   /*
    * (non-Javadoc)
@@ -88,7 +78,7 @@ public class ConfigurationUpdatedJob
       List<String> results = Collections.emptyList();
       try {
         Query query = queryManager
-            .createQuery(String.format("from doc.object(%s) as entry", Entry.getClassReferenceAsString()), Query.XWQL)
+            .createQuery(String.format("from doc.object(%s) as entry", Entry.CLASS_REFERENCE_AS_STRING), Query.XWQL)
             .setWiki(StringUtils.defaultIfBlank(wikiReference.getName(), null));
         results = query.execute();
         if (results == null) {
@@ -98,20 +88,10 @@ public class ConfigurationUpdatedJob
         logger.warn("An error occurred while executing the query", ex);
       }
 
-      XWikiContext context = contextProvider.get();
-      XWiki wiki = context.getWiki();
-
       progressManager.pushLevelProgress(results.size(), this);
       try {
         for (String result : results) {
-          DocumentReference entryRef = documentReferenceResolver.resolve(result);
-          try {
-            XWikiDocument entryDoc = wiki.getDocument(entryRef, context);
-            new Entry(service, entryDoc).update();
-            wiki.saveDocument(entryDoc, context);
-          } catch (Exception ex) {
-            logger.warn("An error occurred while updating " + entryRef, ex);
-          }
+          service.getDocumentWalker().getNode(documentReferenceResolver.resolve(result)).wrapAsEntry().update();
         }
       } finally {
         progressManager.popLevelProgress(this);

@@ -16,11 +16,11 @@ import de.undercouch.citeproc.csl.CSLItemDataBuilder;
 @SuppressWarnings("rawtypes")
 public abstract class FieldProvider<T extends Enum> {
 
-  /** The csl field. */
-  private T cslField;
-
   /** The bib fields. */
   private String[] bibFields;
+
+  /** The csl field. */
+  private T cslField;
 
   /**
    * Instantiates a new field provider.

@@ -24,18 +24,20 @@ import com.xpn.xwiki.doc.XWikiDocument;
  * An EventListener used to monitor configuration update to update bibliographic
  * data.
  *
+ * @see ConfigurationUpdaterEvent
  */
 @Component
 @Singleton
 @Named("ConfigurationUpdaterListener")
 public class ConfigurationUpdaterListener implements EventListener {
 
+  /** The job executor. */
+  @Inject
+  private JobExecutor jobExecutor;
+
   /** The bibliography service. */
   @Inject
   private BibliographyService service;
-
-  @Inject
-  private JobExecutor jobExecutor;
 
   /*
    * (non-Javadoc)
@@ -70,7 +72,7 @@ public class ConfigurationUpdaterListener implements EventListener {
     XWikiDocument document = (XWikiDocument) sourceDocument;
 
     // ConfigurationClass update
-    if (document.getXObject(Configuration.getClassReference(document)) != null) {
+    if (document.getXObject(Configuration.CLASS_REFERENCE) != null) {
       // a configuration has been saved => we trigger an update of the entries
       // to be up to date with the configuration
 

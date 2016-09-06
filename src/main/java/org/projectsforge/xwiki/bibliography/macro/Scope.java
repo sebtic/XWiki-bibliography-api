@@ -5,14 +5,14 @@ package org.projectsforge.xwiki.bibliography.macro;
  */
 public enum Scope {
 
-  /** The undefined. */
-  UNDEFINED(""),
+  /** The cited. */
+  CITED("cited"),
   /** The hidden. */
   HIDDEN("hidden"),
   /** The page. */
   PAGE("page"),
-  /** The cited. */
-  CITED("cited");
+  /** The undefined. */
+  UNDEFINED("");
 
   /**
    * Convert a string to a scope.

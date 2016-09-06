@@ -7,11 +7,11 @@ import org.xwiki.properties.annotation.PropertyDescription;
  */
 public class CiteMacroParameters {
 
-  /** The Constant HIDDEN. */
-  public static final String PARAM_HIDDEN = "hidden";
-
   /** The Constant HIDDEN_DEFAULT. */
   public static final boolean HIDDEN_DEFAULT = false;
+
+  /** The Constant HIDDEN. */
+  public static final String PARAM_HIDDEN = "hidden";
 
   /** The Constant KEYS. */
   public static final String PARAM_KEYS = "keys";

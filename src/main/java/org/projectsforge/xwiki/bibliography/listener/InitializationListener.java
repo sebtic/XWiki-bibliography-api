@@ -16,12 +16,14 @@ import org.xwiki.observation.event.Event;
 /**
  * An EventListener used to ensure requirements are met.
  *
+ * @see InitializationEvent
  */
 @Component
 @Singleton
 @Named("InitializationListener")
 public class InitializationListener implements EventListener {
 
+  /** The service. */
   @Inject
   private BibliographyService service;
 

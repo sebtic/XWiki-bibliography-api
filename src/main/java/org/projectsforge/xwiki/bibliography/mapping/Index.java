@@ -8,19 +8,15 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.projectsforge.xwiki.bibliography.Constants;
-import org.projectsforge.xwiki.bibliography.Error;
 import org.projectsforge.xwiki.bibliography.Utils;
 import org.projectsforge.xwiki.bibliography.macro.Scope;
-import org.projectsforge.xwiki.bibliography.service.BibliographyService;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 
 import de.undercouch.citeproc.csl.CSLItemData;
@@ -29,6 +25,13 @@ import de.undercouch.citeproc.csl.CSLItemData;
  * The Class Index.
  */
 public class Index {
+
+  /** The Constant CLASS_REFERENCE. */
+  public static final EntityReference CLASS_REFERENCE = new EntityReference("IndexClass", EntityType.DOCUMENT,
+      Constants.CODE_SPACE_REFERENCE);
+
+  /** The Constant CLASS_REFERENCE_AS_STRING. */
+  public static final String CLASS_REFERENCE_AS_STRING = Constants.CODE_SPACE_NAME_AS_STRING + ".IndexClass";
 
   /** The Constant FIELD_BIBLIOGRAPHY_PAGE. */
   public static final String FIELD_BIBLIOGRAPHY_PAGE = "bibliographyPage";
@@ -45,34 +48,8 @@ public class Index {
   /** The logger. */
   private static Logger logger = LoggerFactory.getLogger(Index.class);
 
-  /**
-   * Gets the class reference.
-   *
-   * @param entityReference
-   *          the entity reference
-   * @return the class reference
-   */
-  public static DocumentReference getClassReference(EntityReference entityReference) {
-    return new DocumentReference(entityReference.extractReference(EntityType.WIKI).getName(),
-        Constants.CODE_SPACE_NAME_AS_LIST, "IndexClass");
-  }
-
-  /**
-   * Gets the class reference.
-   *
-   * @param document
-   *          the document
-   * @return the class reference
-   */
-  public static DocumentReference getClassReference(XWikiDocument document) {
-    return getClassReference(document.getDocumentReference());
-  }
-
-  /** The document. */
-  private XWikiDocument document;
-
-  /** The service. */
-  private BibliographyService service;
+  /** The node. */
+  private Node node;
 
   /** The xobject. */
   private BaseObject xobject;
@@ -80,15 +57,12 @@ public class Index {
   /**
    * Instantiates a new index.
    *
-   * @param service
-   *          the service
-   * @param document
-   *          the document
+   * @param node
+   *          the node
    */
-  public Index(BibliographyService service, XWikiDocument document) {
-    this.service = service;
-    this.document = document;
-    this.xobject = document.getXObject(getClassReference(document), true, service.getContext());
+  Index(Node node) {
+    this.node = node;
+    this.xobject = node.getXObject(CLASS_REFERENCE, true);
   }
 
   /**
@@ -111,22 +85,13 @@ public class Index {
       style = xobject.getLargeStringValue(Configuration.FIELD_BIBLIOGRAPHY_MAIN_STYLE);
     }
     if (StringUtils.isBlank(style)) {
-      style = service.getDefaultConfiguration(document.getDocumentReference().getWikiReference())
+      style = node.getService().getDefaultConfiguration(node.getDocumentReference().getWikiReference())
           .getBibliographyStyle(Configuration.FIELD_BIBLIOGRAPHY_MAIN_STYLE);
     }
     if (StringUtils.isBlank(style)) {
       style = "ieee";
     }
     return style;
-  }
-
-  /**
-   * Gets the document.
-   *
-   * @return the document
-   */
-  public XWikiDocument getDocument() {
-    return document;
   }
 
   /**
@@ -149,8 +114,8 @@ public class Index {
       results.addAll(Arrays.asList(StringUtils
           .defaultString(xobject.getLargeStringValue(Configuration.FIELD_EXTRA_SOURCES)).trim().split("\\|")));
     }
-    results.addAll(
-        service.getDefaultConfiguration(document.getDocumentReference().getWikiReference()).getExtraWikiSources());
+    results.addAll(node.getService().getDefaultConfiguration(node.getDocumentReference().getWikiReference())
+        .getExtraWikiSources());
     return results;
   }
 
@@ -160,7 +125,16 @@ public class Index {
    * @return the keys
    */
   public List<String> getKeys() {
-    return Utils.deserializeKeys(service, xobject.getLargeStringValue(FIELD_KEYS));
+    return Utils.deserializeKeys(node.getService(), xobject.getLargeStringValue(FIELD_KEYS));
+  }
+
+  /**
+   * Gets the node.
+   *
+   * @return the node
+   */
+  public Node getNode() {
+    return node;
   }
 
   /**
@@ -175,7 +149,7 @@ public class Index {
       scope = Scope.toScope(StringUtils.defaultString(xobject.getStringValue(Configuration.FIELD_SCOPE)).trim());
     }
     if (scope == Scope.UNDEFINED) {
-      scope = service.getDefaultConfiguration(document.getDocumentReference().getWikiReference()).getScope();
+      scope = node.getService().getDefaultConfiguration(node.getDocumentReference().getWikiReference()).getScope();
     }
     return scope;
   }
@@ -187,23 +161,6 @@ public class Index {
    */
   public boolean isExpired() {
     return xobject.getIntValue(FIELD_EXPIRED, 0) == 1;
-  }
-
-  /**
-   * Save.
-   */
-  public void save() {
-    // ensure only one update is done at a time
-    synchronized (Index.class) {
-      // save changes
-      XWikiContext context = service.getContext();
-      try {
-        context.getWiki().saveDocument(document, context);
-      } catch (XWikiException ex) {
-        service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
-        logger.warn("An error occurred while saving index", ex);
-      }
-    }
   }
 
   /**
@@ -243,7 +200,7 @@ public class Index {
    *          the new keys
    */
   public void setKeys(List<String> keys) {
-    xobject.setLargeStringValue(FIELD_KEYS, Utils.serializeKeys(service, keys));
+    xobject.setLargeStringValue(FIELD_KEYS, Utils.serializeKeys(node.getService(), keys));
   }
 
   /*
@@ -253,7 +210,7 @@ public class Index {
    */
   @Override
   public String toString() {
-    return "Index [document=" + document.getDocumentReference() + ", xobject=" + xobject + "]";
+    return "Index [document=" + node.getDocumentReference() + ", xobject=" + xobject + "]";
   }
 
   /**
@@ -267,15 +224,15 @@ public class Index {
     // ensure only one update is done at a time
     synchronized (Index.class) {
       // collect all page tree from this index (included)
-      List<XWikiDocument> tree = Utils.getDocumentTree(service, document);
+      List<Node> tree = node.getTree();
 
       // collect informations
       List<String> keys = new ArrayList<>();
       Set<String> keysSet = new HashSet<>();
       DocumentReference bibliographyPage = null;
 
-      for (XWikiDocument page : tree) {
-        LocalIndex localIndex = new LocalIndex(service, page, this);
+      for (Node page : tree) {
+        LocalIndex localIndex = page.wrapAsLocalIndex(this);
         // collect cited keys in order
         for (String key : localIndex.getKeys()) {
           if (!keysSet.contains(key)) {
@@ -297,7 +254,7 @@ public class Index {
       // load entries
       List<CSLItemData> entries = new ArrayList<>();
       for (String key : keys) {
-        Entry entry = service.findEntry(this, key);
+        Entry entry = node.getService().findEntry(this, key);
         if (entry != null) {
           entries.add(entry.getCSLItemData());
         }

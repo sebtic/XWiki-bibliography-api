@@ -9,6 +9,7 @@ import java.util.function.Function;
 import org.apache.commons.lang.StringUtils;
 import org.projectsforge.xwiki.bibliography.Error;
 import org.projectsforge.xwiki.bibliography.Utils;
+import org.projectsforge.xwiki.bibliography.mapping.Entry;
 import org.projectsforge.xwiki.bibliography.service.BibliographyService;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.WikiReference;
@@ -65,14 +66,14 @@ public enum CSLNameFields {
     return null;
   }
 
-  /** The setter. */
-  private BiConsumer<CSLItemDataBuilder, CSLName[]> setter;
+  /** The getter. */
+  private Function<CSLItemData, CSLName[]> getter;
 
   /** The name. */
   private String name;
 
-  /** The getter. */
-  private Function<CSLItemData, CSLName[]> getter;
+  /** The setter. */
+  private BiConsumer<CSLItemDataBuilder, CSLName[]> setter;
 
   /**
    * Instantiates a new CSL name fields.
@@ -94,27 +95,27 @@ public enum CSLNameFields {
   /**
    * Decode.
    *
-   * @param xobject
-   *          the xobject
+   * @param entry
+   *          the entry
    * @return the list
    */
-  public List<String> decode(BaseObject xobject) {
-    String value = StringUtils.defaultIfBlank(xobject.getLargeStringValue(toString()), "");
+  public List<String> decode(Entry entry) {
+    String value = StringUtils.defaultIfBlank(entry.getXObject().getLargeStringValue(toString()), "");
     return Arrays.asList(value.split("\\|"));
   }
 
   /**
    * Encode.
    *
-   * @param xobject
-   *          the xobject
+   * @param entry
+   *          the entry
    * @param values
    *          the values
    */
-  public void encode(BaseObject xobject, List<String> values) {
+  public void encode(Entry entry, List<String> values) {
     StringJoiner joiner = new StringJoiner("|");
     values.forEach(joiner::add);
-    xobject.setLargeStringValue(toString(), joiner.toString());
+    entry.getXObject().setLargeStringValue(toString(), joiner.toString());
   }
 
   /**

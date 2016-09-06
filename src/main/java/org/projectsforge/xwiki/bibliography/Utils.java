@@ -4,11 +4,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,13 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.model.internal.reference.DefaultSymbolScheme;
 import org.xwiki.model.internal.reference.LocalStringEntityReferenceSerializer;
-import org.xwiki.model.reference.DocumentReference;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
 
 import de.undercouch.citeproc.csl.CSLDate;
 import de.undercouch.citeproc.csl.CSLDateBuilder;
@@ -39,15 +31,15 @@ import de.undercouch.citeproc.helper.json.StringJsonBuilderFactory;
  */
 public class Utils {
 
-  /** The Constant STRING_JSON_BUILDER_FACTORY. */
-  private static final StringJsonBuilderFactory STRING_JSON_BUILDER_FACTORY = new StringJsonBuilderFactory();
+  /** Serialize document reference without the wikiname. */
+  public static final LocalStringEntityReferenceSerializer LOCAL_REFERENCE_SERIALIZER = new LocalStringEntityReferenceSerializer(
+      new DefaultSymbolScheme());
 
   /** The Constant logger. */
   private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
-  /** Serialize document reference without the wikiname. */
-  public static final LocalStringEntityReferenceSerializer LOCAL_REFERENCE_SERIALIZER = new LocalStringEntityReferenceSerializer(
-      new DefaultSymbolScheme());
+  /** The Constant STRING_JSON_BUILDER_FACTORY. */
+  private static final StringJsonBuilderFactory STRING_JSON_BUILDER_FACTORY = new StringJsonBuilderFactory();
 
   /**
    * Convert a date to a string representation (handle single date or range,
@@ -207,51 +199,6 @@ public class Utils {
       }
     }
     return Collections.emptyList();
-  }
-
-  /**
-   * Gets the document tree.
-   *
-   * @param service
-   *          the service
-   * @param root
-   *          the root
-   * @return the document tree
-   */
-  public static List<XWikiDocument> getDocumentTree(BibliographyService service, XWikiDocument root) {
-    Set<DocumentReference> visited = new HashSet<>();
-    List<XWikiDocument> descendants = new ArrayList<>();
-    Deque<DocumentReference> pending = new LinkedList<>();
-
-    XWikiContext context = service.getContext();
-
-    descendants.add(root);
-    visited.add(root.getDocumentReference());
-    try {
-      pending.addAll(root.getChildrenReferences(context));
-
-      while (!pending.isEmpty()) {
-        DocumentReference currentRef = pending.removeFirst();
-        // protect against loop
-        if (visited.contains(currentRef)) {
-          continue;
-        }
-        XWikiDocument current = context.getWiki().getDocument(currentRef, context);
-        descendants.add(current);
-        visited.add(currentRef);
-
-        List<DocumentReference> children = current.getChildrenReferences(context);
-        for (int i = children.size() - 1; i >= 0; --i) {
-          pending.addFirst(children.get(i));
-        }
-      }
-    } catch (XWikiException ex) {
-      service.addError(Error.XWIKI_GET_DOCUMENT, ex.getMessage());
-      logger.warn("An error occurred while retreiving document tree", ex);
-    }
-    descendants
-        .forEach(d -> logger.warn("getDocumentTree {} => {}", root.getDocumentReference(), d.getDocumentReference()));
-    return descendants;
   }
 
   /**

@@ -11,16 +11,13 @@ import org.projectsforge.xwiki.bibliography.fields.CSLDateFields;
 import org.projectsforge.xwiki.bibliography.fields.CSLNameFields;
 import org.projectsforge.xwiki.bibliography.fields.CSLStringFields;
 import org.projectsforge.xwiki.bibliography.fields.CSLTypeFields;
-import org.projectsforge.xwiki.bibliography.service.BibliographyService;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 
 import de.undercouch.citeproc.CSL;
@@ -33,6 +30,16 @@ import de.undercouch.citeproc.output.Bibliography;
  * The Class Entry.
  */
 public class Entry {
+
+  /** The Constant CLASS_REFERENCE. */
+  public static final EntityReference CLASS_REFERENCE = new EntityReference("EntryClass", EntityType.DOCUMENT,
+      Constants.CODE_SPACE_REFERENCE);
+
+  /** The Constant CLASS_REFERENCE_AS_STRING. */
+  public static final String CLASS_REFERENCE_AS_STRING = Constants.CODE_SPACE_NAME_AS_STRING + ".EntryClass";
+
+  /** The Constant FIELD_BIBLATEX. */
+  private static final String FIELD_BIBLATEX = "biblatex";
 
   /** The Constant FIELD_CSL_ITEM_DATA. */
   public static final String FIELD_CSL_ITEM_DATA = "CSLItemData";
@@ -49,62 +56,21 @@ public class Entry {
   /** The Constant NAME_SUFFIX. */
   public static final String NAME_SUFFIX = ".WebHome";
 
-  /** The Constant FIELD_BIBLATEX. */
-  private static final String FIELD_BIBLATEX = "biblatex";
-
-  /**
-   * Gets the class reference.
-   *
-   * @param entityReference
-   *          the entity reference
-   * @return the class reference
-   */
-  public static DocumentReference getClassReference(EntityReference entityReference) {
-    return new DocumentReference(entityReference.extractReference(EntityType.WIKI).getName(),
-        Constants.CODE_SPACE_NAME_AS_LIST, "EntryClass");
-  }
-
-  /**
-   * Gets the class reference.
-   *
-   * @param document
-   *          the document
-   * @return the class reference
-   */
-  public static DocumentReference getClassReference(XWikiDocument document) {
-    return getClassReference(document.getDocumentReference());
-  }
-
-  /**
-   * Gets the class reference as string.
-   *
-   * @return the class reference as string
-   */
-  public static Object getClassReferenceAsString() {
-    return Constants.CODE_SPACE_NAME_AS_STRING + ".EntryClass";
-  }
-
-  /** The document. */
-  private XWikiDocument document;
-
-  /** The service. */
-  private BibliographyService service;
+  /** The node. */
+  private Node node;
 
   /** The xobject. */
   private BaseObject xobject;
 
   /**
-   * Instantiates a new bibliography entry.
+   * Instantiates a new entry.
    *
-   * @param service
-   *          the service
-   * @param document
-   *          the document
+   * @param node
+   *          the node
    */
-  public Entry(BibliographyService service, XWikiDocument document) {
-    this.service = service;
-    this.document = document;
-    this.xobject = document.getXObject(getClassReference(document), true, service.getContext());
+  public Entry(Node node) {
+    this.node = node;
+    this.xobject = node.getXObject(CLASS_REFERENCE, true);
   }
 
   /**
@@ -117,23 +83,23 @@ public class Entry {
    */
   public void fillFromCSLObject(DocumentReference authorReference, CSLItemData itemData) {
     for (CSLTypeFields field : CSLTypeFields.values()) {
-      field.fillFromCSLObject(service, xobject, itemData);
+      field.fillFromCSLObject(node.getService(), xobject, itemData);
     }
 
     for (CSLStringFields field : CSLStringFields.values()) {
-      field.fillFromCSLObject(service, xobject, itemData);
+      field.fillFromCSLObject(node.getService(), xobject, itemData);
     }
 
     for (CSLNameFields field : CSLNameFields.values()) {
-      field.fillFromCSLObject(service, xobject, itemData, authorReference);
+      field.fillFromCSLObject(node.getService(), xobject, itemData, authorReference);
     }
 
     for (CSLDateFields field : CSLDateFields.values()) {
-      field.fillFromCSLObject(service, xobject, itemData);
+      field.fillFromCSLObject(node.getService(), xobject, itemData);
     }
 
     for (CSLCategoriesFields field : CSLCategoriesFields.values()) {
-      field.fillFromCSLObject(service, xobject, itemData);
+      field.fillFromCSLObject(node.getService(), xobject, itemData);
     }
   }
 
@@ -143,40 +109,25 @@ public class Entry {
    * @return the CSL item data
    */
   public CSLItemData getCSLItemData() {
-    return Utils.deserializeCSLItemData(service, xobject.getLargeStringValue(FIELD_CSL_ITEM_DATA));
+    return Utils.deserializeCSLItemData(node.getService(), xobject.getLargeStringValue(FIELD_CSL_ITEM_DATA));
   }
 
   /**
-   * Gets the document.
+   * Gets the node.
    *
-   * @return the document
+   * @return the node
    */
-  public XWikiDocument getDocument() {
-    return document;
+  public Node getNode() {
+    return node;
   }
 
   /**
-   * Save.
+   * Gets the x object.
    *
-   * @param authorReference
-   *          the author reference
+   * @return the x object
    */
-  public void save(DocumentReference authorReference) {
-    XWikiContext context = service.getContext();
-    DocumentReference oldUser = context.getUserReference();
-    context.setUserReference(authorReference);
-    try {
-      try {
-        document.setAuthorReference(authorReference);
-        document.setContentAuthorReference(authorReference);
-        context.getWiki().saveDocument(document, context);
-      } catch (XWikiException ex) {
-        logger.warn("Failed saving document", ex);
-        service.addError(Error.SAVE_DOCUMENT, document.getDocumentReference());
-      }
-    } finally {
-      context.setUserReference(oldUser);
-    }
+  public BaseObject getXObject() {
+    return xobject;
   }
 
   /**
@@ -187,45 +138,45 @@ public class Entry {
       CSLItemDataBuilder builder = new CSLItemDataBuilder();
 
       for (CSLTypeFields field : CSLTypeFields.values()) {
-        field.fillFromXObject(service, builder, xobject);
+        field.fillFromXObject(node.getService(), builder, xobject);
       }
 
       for (CSLStringFields field : CSLStringFields.values()) {
-        field.fillFromXObject(service, builder, xobject);
+        field.fillFromXObject(node.getService(), builder, xobject);
       }
 
       for (CSLNameFields field : CSLNameFields.values()) {
-        field.fillFromXObject(service, builder, xobject);
+        field.fillFromXObject(node.getService(), builder, xobject);
       }
 
       for (CSLDateFields field : CSLDateFields.values()) {
-        field.fillFromXObject(service, builder, xobject);
+        field.fillFromXObject(node.getService(), builder, xobject);
       }
 
       for (CSLCategoriesFields field : CSLCategoriesFields.values()) {
-        field.fillFromXObject(service, builder, xobject);
+        field.fillFromXObject(node.getService(), builder, xobject);
       }
 
       CSLItemData itemData = builder.build();
       xobject.setLargeStringValue(FIELD_CSL_ITEM_DATA, Utils.serializeCSLItemData(itemData));
 
       CSL csl = new CSL(new ListItemDataProvider(itemData),
-          service.getDefaultConfiguration(document.getDocumentReference().getWikiReference())
+          node.getService().getDefaultConfiguration(node.getDocumentReference().getWikiReference())
               .getBibliographyStyle(Configuration.FIELD_BIBLIOGRAPHY_ENTRY_STYLE));
       csl.registerCitationItems(itemData.getId());
       csl.setOutputFormat("text");
       Bibliography bibiography = csl.makeBibliography();
       String rendered = bibiography.getEntries()[0].trim();
-      rendered = rendered.replaceAll(Constants.ENTRY_TARGET_MARK, document.getDocumentReference().toString());
+      rendered = rendered.replaceAll(Constants.ENTRY_TARGET_MARK, node.getDocumentReference().toString());
 
-      document.setTitle(itemData.getId());
+      node.getXWikiDocument().setTitle(itemData.getId());
       xobject.setLargeStringValue(FIELD_RENDERED, rendered);
       xobject.setLargeStringValue(FIELD_BIBLATEX, BibLaTeXExporter.export(itemData));
     } catch (IOException ex) {
-      service.addError(Error.CSL, document.getDocumentReference(), xobject, ex.getMessage());
+      node.getService().addError(Error.CSL, node.getDocumentReference(), xobject, ex.getMessage());
       logger.warn("Can not format title", ex);
     } catch (Exception ex) {
-      service.addError(Error.BUILD_CSLDATAITEM, document.getDocumentReference(), xobject, ex.getMessage());
+      node.getService().addError(Error.BUILD_CSLDATAITEM, node.getDocumentReference(), xobject, ex.getMessage());
       logger.warn("An error occurred", ex);
     }
   }

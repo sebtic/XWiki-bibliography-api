@@ -9,6 +9,7 @@ import javax.inject.Singleton;
 
 import org.projectsforge.xwiki.bibliography.mapping.Annotation;
 import org.projectsforge.xwiki.bibliography.mapping.Attachment;
+import org.projectsforge.xwiki.bibliography.mapping.DocumentWalker.Node;
 import org.projectsforge.xwiki.bibliography.mapping.Entry;
 import org.projectsforge.xwiki.bibliography.mapping.Index;
 import org.projectsforge.xwiki.bibliography.mapping.Person;
@@ -26,6 +27,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
  * An EventListener used to monitor document creation, deletion and update to
  * update bibliographic data (do modification before storage on disk).
  *
+ * @see DocumentUpdaterEvent
  */
 @Component
 @Singleton
@@ -68,32 +70,51 @@ public class DocumentUpdaterListener implements EventListener {
     // this method is called before the document is saved to the database
     XWikiDocument document = (XWikiDocument) sourceDocument;
 
+    Node node = bibliographyService.getDocumentWalker().wrapNode(document);
+
     // IndexClass update
-    if (document.getXObject(Index.getClassReference(document)) != null) {
+    if (node.isIndex()) {
       // it's an index, expire it then update
-      Index index = new Index(bibliographyService, document);
+      Index index = node.wrapAsIndex();
       index.setExpired(true);
       index.update();
     }
 
     // PersonClass update
-    if (document.getXObject(Person.getClassReference(document)) != null) {
-      new Person(bibliographyService, document).update();
+    if (document.getXObject(Person.CLASS_REFERENCE) != null) {
+      new Person(node).update();
     }
 
     // EntryClass update
-    if (document.getXObject(Entry.getClassReference(document)) != null) {
-      new Entry(bibliographyService, document).update();
+    if (document.getXObject(Entry.CLASS_REFERENCE) != null) {
+      new Entry(node).update();
     }
 
     // AnnotationClass update
-    if (document.getXObject(Annotation.getClassReference(document)) != null) {
-      new Annotation(bibliographyService, document).update();
+    if (document.getXObject(Annotation.CLASS_REFERENCE) != null) {
+      new Annotation(node).update();
     }
 
     // AttachmentClass update
-    if (document.getXObject(Attachment.getClassReference(document)) != null) {
-      new Attachment(bibliographyService, document).update();
+    if (document.getXObject(Attachment.CLASS_REFERENCE) != null) {
+      new Attachment(node).update();
+    }
+
+    if (document.isNew()) {
+      if (node.getRootNode().isIndex() && node.getParent() != null) {
+        int last = Integer.MIN_VALUE;
+        for (Node child : node.getParent().getChildren()) {
+          int order = child.getOrder();
+          if (order > last && order != Integer.MAX_VALUE) {
+            last = order;
+          }
+        }
+        if (last == Integer.MIN_VALUE) {
+          node.setOrder(0);
+        } else {
+          node.setOrder(last + 1);
+        }
+      }
     }
   }
 
