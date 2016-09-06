@@ -513,6 +513,11 @@ public class DocumentWalker {
       this.order = order;
     }
 
+    @Override
+    public String toString() {
+      return documentReference == null ? "null" : documentReference.toString();
+    }
+
     /**
      * Wrap as configuration.
      *
