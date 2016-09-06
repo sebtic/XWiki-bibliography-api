@@ -153,7 +153,7 @@ public class DocumentWalker {
             // the children which are nested spaces
             for (String space : queryManager
                 .createQuery(
-                    "select distinct space.reference from Space space where space.parent = :space and doc.hidden = :hidden",
+                    "select distinct space.reference from Space space where space.parent = :space and space.hidden = :hidden",
                     Query.XWQL)
                 .bindValue("space", spaceName).bindValue("hidden", includeHidden).setWiki(context.getWikiId())
                 .<String> execute()) {
