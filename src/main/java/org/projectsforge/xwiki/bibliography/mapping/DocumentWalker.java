@@ -120,22 +120,23 @@ public class DocumentWalker {
         if ("WebHome".equals(getDocumentReference().getName())) {
           XWikiContext context = service.getContext();
 
-          List<String> results = null;
+          List<String> results = new ArrayList<>();
+
+          String spaceName = Utils.LOCAL_REFERENCE_SERIALIZER.serialize(getDocumentReference().getLastSpaceReference());
 
           try {
-            results = queryManager
-                .createQuery(
-                    "select distinct doc.fullName from Document doc where doc.name <> 'WebHome' and doc.space = :space",
-                    Query.XWQL)
-                .bindValue("space",
-                    Utils.LOCAL_REFERENCE_SERIALIZER.serialize(getDocumentReference().getLastSpaceReference()))
-                .setWiki(context.getWikiId()).execute();
+            // the children which are not nested spaces
+            results.addAll(queryManager.createQuery(
+                "select distinct doc.fullName from Document doc where doc.name <> 'WebHome' and doc.space = :space",
+                Query.XWQL).bindValue("space", spaceName).setWiki(context.getWikiId()).execute());
+            // the children which are nested spaces
+            for (String space : queryManager
+                .createQuery("select distinct space.reference from Space space where space.parent = :space", Query.XWQL)
+                .bindValue("space", spaceName).setWiki(context.getWikiId()).<String> execute()) {
+              results.add(space + ".WebHome");
+            }
           } catch (QueryException ex) {
             logger.warn("An error occurred while querying children of " + documentReference, ex);
-          }
-
-          if (results == null) {
-            results = Collections.emptyList();
           }
 
           children = new ArrayList<>();
