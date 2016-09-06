@@ -116,6 +116,17 @@ public class DocumentWalker {
      * @return the children
      */
     public List<Node> getChildren() {
+      return getChildren(false);
+    }
+
+    /**
+     * Gets the children.
+     *
+     * @param includeHidden
+     *          include hidden document and space ?
+     * @return the children
+     */
+    public List<Node> getChildren(boolean includeHidden) {
       if (children == null) {
         if ("WebHome".equals(getDocumentReference().getName())) {
           XWikiContext context = service.getContext();
@@ -126,13 +137,19 @@ public class DocumentWalker {
 
           try {
             // the children which are not nested spaces
-            results.addAll(queryManager.createQuery(
-                "select distinct doc.fullName from Document doc where doc.name <> 'WebHome' and doc.space = :space",
-                Query.XWQL).bindValue("space", spaceName).setWiki(context.getWikiId()).execute());
+            results.addAll(queryManager
+                .createQuery(
+                    "select distinct doc.fullName from Document doc where doc.name <> 'WebHome' and doc.space = :space and doc.hidden = :hidden",
+                    Query.XWQL)
+                .bindValue("space", spaceName).bindValue("hidden", includeHidden ? 1 : 0).setWiki(context.getWikiId())
+                .execute());
             // the children which are nested spaces
             for (String space : queryManager
-                .createQuery("select distinct space.reference from Space space where space.parent = :space", Query.XWQL)
-                .bindValue("space", spaceName).setWiki(context.getWikiId()).<String> execute()) {
+                .createQuery(
+                    "select distinct space.reference from Space space where space.parent = :space and doc.hidden = :hidden",
+                    Query.XWQL)
+                .bindValue("space", spaceName).bindValue("hidden", includeHidden ? 1 : 0).setWiki(context.getWikiId())
+                .<String> execute()) {
               results.add(space + ".WebHome");
             }
           } catch (QueryException ex) {
@@ -141,7 +158,9 @@ public class DocumentWalker {
 
           children = new ArrayList<>();
           for (String result : results) {
-            children.add(getNode(documentReferenceResolver.resolve(result, context.getWikiReference())));
+            Node node = getNode(documentReferenceResolver.resolve(result, context.getWikiReference()));
+
+            children.add(node);
           }
           Collections.sort(children);
         } else {
