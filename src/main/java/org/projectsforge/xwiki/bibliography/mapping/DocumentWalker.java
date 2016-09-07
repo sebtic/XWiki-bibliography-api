@@ -183,6 +183,7 @@ public class DocumentWalker {
           // we are not the space WebHome => we dont have children
           children = Collections.emptyList();
         }
+        children = Collections.unmodifiableList(children);
       }
       return children;
     }
@@ -474,11 +475,16 @@ public class DocumentWalker {
       if (child.canDelete() && authorizationManager.hasAccess(Right.EDIT, service.getContext().getUserReference(),
           newDocumentReference)) {
         try {
-          child.getXWikiDocument().rename(newDocumentReference, service.getContext());
-          child.getXWikiDocument().setParentReference(getDocumentReference());
-          child.documentReference = newDocumentReference;
-          child.children = null;
-          child.save();
+
+          logger.warn("rename {} => {}", child.documentReference, newDocumentReference);
+
+          if (logger == null) {
+            child.getXWikiDocument().rename(newDocumentReference, service.getContext());
+            child.getXWikiDocument().setParentReference(getDocumentReference());
+            child.documentReference = newDocumentReference;
+            child.children = null;
+            child.save();
+          }
           nodes.remove(child.getDocumentReference());
           nodes.put(newDocumentReference, child);
         } catch (XWikiException ex) {
