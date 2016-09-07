@@ -509,8 +509,6 @@ public class DocumentWalker {
         try {
           List<Node> oldChildren = child.getChildren();
           child.getXWikiDocument().rename(newDocumentReference, service.getContext());
-          // invalidate the document
-          child.document = null;
           child.getXWikiDocument().setParentReference(getDocumentReference());
           child.documentReference = newDocumentReference;
           child.children = null;
@@ -619,7 +617,7 @@ public class DocumentWalker {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#toString()
      */
     @Override
