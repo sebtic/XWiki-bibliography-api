@@ -482,16 +482,11 @@ public class DocumentWalker {
       if (child.canDelete() && authorizationManager.hasAccess(Right.EDIT, service.getContext().getUserReference(),
           newDocumentReference)) {
         try {
-
-          logger.warn("rename {} => {}", child.documentReference, newDocumentReference);
-
-          if (logger == null) {
-            child.getXWikiDocument().rename(newDocumentReference, service.getContext());
-            child.getXWikiDocument().setParentReference(getDocumentReference());
-            child.documentReference = newDocumentReference;
-            child.children = null;
-            child.save();
-          }
+          child.getXWikiDocument().rename(newDocumentReference, service.getContext());
+          child.getXWikiDocument().setParentReference(getDocumentReference());
+          child.documentReference = newDocumentReference;
+          child.children = null;
+          child.save();
           nodes.remove(child.getDocumentReference());
           nodes.put(newDocumentReference, child);
         } catch (XWikiException ex) {
