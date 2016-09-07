@@ -173,9 +173,10 @@ public class DocumentWalker {
 
           children = new ArrayList<>();
           for (String result : results) {
-            Node node = getNode(documentReferenceResolver.resolve(result, context.getWikiReference()));
-
-            children.add(node);
+            DocumentReference childRef = documentReferenceResolver.resolve(result, context.getWikiReference());
+            if (!getDocumentReference().equals(childRef)) {
+              children.add(getNode(childRef));
+            }
           }
           Collections.sort(children);
         } else {
