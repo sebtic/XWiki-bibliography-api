@@ -464,13 +464,20 @@ public class DocumentWalker {
         return false;
       }
 
-      String newName = child.getDocumentReference().getName();
-      if ("WebHome".equals(newName)) {
-        // it is the main page of a space => we prefix with the last space name
-        // as the new name
-        newName = child.getDocumentReference().getLastSpaceReference().getName() + ".WebHome";
+      DocumentReference newDocumentReference;
+
+      if ("WebHome".equals(child.getDocumentReference().getName())) {
+        // this reference : a.b.c.WebHome
+        // child reference e.f.WebHome => a.b.c.f.WebHome
+        newDocumentReference = new DocumentReference(new EntityReference("WebHome", EntityType.DOCUMENT,
+            new EntityReference(child.getDocumentReference().getParent().getName(), EntityType.SPACE,
+                getDocumentReference().getParent())));
+      } else {
+        // this reference : a.b.c.WebHome
+        // child reference : e.f => a.b.c.f
+        newDocumentReference = new DocumentReference(new EntityReference(child.getDocumentReference().getName(),
+            EntityType.DOCUMENT, getDocumentReference().getParent()));
       }
-      DocumentReference newDocumentReference = documentReferenceResolver.resolve(newName, getDocumentReference());
 
       if (child.canDelete() && authorizationManager.hasAccess(Right.EDIT, service.getContext().getUserReference(),
           newDocumentReference)) {
