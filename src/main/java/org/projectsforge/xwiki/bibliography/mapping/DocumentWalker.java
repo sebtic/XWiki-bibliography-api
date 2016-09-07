@@ -320,6 +320,8 @@ public class DocumentWalker {
         Node result = getPreviousSibling();
         if (result != null) {
           return result;
+        } else {
+          return getParent();
         }
       }
       return null;
