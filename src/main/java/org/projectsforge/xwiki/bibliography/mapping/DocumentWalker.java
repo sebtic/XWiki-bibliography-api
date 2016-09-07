@@ -482,13 +482,21 @@ public class DocumentWalker {
       if (child.canDelete() && authorizationManager.hasAccess(Right.EDIT, service.getContext().getUserReference(),
           newDocumentReference)) {
         try {
+          List<Node> oldChildren = child.getChildren();
           child.getXWikiDocument().rename(newDocumentReference, service.getContext());
           child.getXWikiDocument().setParentReference(getDocumentReference());
           child.documentReference = newDocumentReference;
           child.children = null;
           child.save();
-          nodes.remove(child.getDocumentReference());
-          nodes.put(newDocumentReference, child);
+
+          // purge nodes to force a clean reload of nodes
+          // TODO : do not systematically remove everything ?
+          nodes.clear();
+
+          // now move all old children as children of the new node
+          for (Node oldChild : oldChildren) {
+            getNode(newDocumentReference).moveAsChild(oldChild);
+          }
         } catch (XWikiException ex) {
           logger.warn("An error occurred while adding " + child.getDocumentReference() + " as child of "
               + getDocumentReference(), ex);
