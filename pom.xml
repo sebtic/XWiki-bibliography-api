@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.projectsforge.xwiki</groupId>
-	<artifactId>bibliography-api</artifactId>
+	<artifactId>booktools-api</artifactId>
 	<version>1.0.38</version>
-	<name>XWiki Bibliography API</name>
-	<description>XWiki Bibliography API</description>
+	<name>XWiki BookTools API</name>
+	<description>XWiki BookTools API</description>
 	<packaging>jar</packaging>
 
 	<organization>
@@ -23,17 +23,17 @@
 	</developers>
 
 	<scm>
-		<url>https://gitlab.projectsforge.org/XWiki/bibliography-api</url>
-		<connection>scm:git:https://gitlab.projectsforge.org/XWiki/bibliography-api.git</connection>
-		<developerConnection>scm:git:ssh://git@gitlab.projectsforge.org:2222/XWiki/bibliography-api.git</developerConnection>
+		<url>https://gitlab.projectsforge.org/XWiki/booktools-api</url>
+		<connection>scm:git:https://gitlab.projectsforge.org/XWiki/booktools-api.git</connection>
+		<developerConnection>scm:git:ssh://git@gitlab.projectsforge.org:2222/XWiki/booktools-api.git</developerConnection>
 	</scm>
 	<ciManagement>
 		<system>gitlab-ci</system>
-		<url>https://gitlab.projectsforge.org/XWiki/bibliography-api</url>
+		<url>https://gitlab.projectsforge.org/XWiki/booktools-api</url>
 	</ciManagement>
 	<issueManagement>
 		<system>gitlab</system>
-		<url>https://gitlab.projectsforge.org/XWiki/bibliography-api/issues</url>
+		<url>https://gitlab.projectsforge.org/XWiki/booktools-api/issues</url>
 	</issueManagement>
 
 	<properties>
