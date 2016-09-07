@@ -72,14 +72,29 @@ public class DocumentWalker {
       this.document = document;
     }
 
+    /**
+     * Can delete.
+     *
+     * @return true, if successful
+     */
     public boolean canDelete() {
       return authorizationManager.hasAccess(Right.DELETE, service.getContext().getUserReference(), documentReference);
     }
 
+    /**
+     * Can edit.
+     *
+     * @return true, if successful
+     */
     public boolean canEdit() {
       return authorizationManager.hasAccess(Right.EDIT, service.getContext().getUserReference(), documentReference);
     }
 
+    /**
+     * Can view.
+     *
+     * @return true, if successful
+     */
     public boolean canView() {
       return authorizationManager.hasAccess(Right.VIEW, service.getContext().getUserReference(), documentReference);
     }
@@ -347,10 +362,20 @@ public class DocumentWalker {
       return service;
     }
 
+    /**
+     * Gets the title.
+     *
+     * @return the title
+     */
     public String getTitle() {
       return getXWikiDocument().getTitle();
     }
 
+    /**
+     * Gets the translated title.
+     *
+     * @return the translated title
+     */
     public String getTranslatedTitle() {
       try {
         return getXWikiDocument().getTranslatedDocument(service.getContext()).getTitle();
@@ -484,6 +509,8 @@ public class DocumentWalker {
         try {
           List<Node> oldChildren = child.getChildren();
           child.getXWikiDocument().rename(newDocumentReference, service.getContext());
+          // invalidate the document
+          child.document = null;
           child.getXWikiDocument().setParentReference(getDocumentReference());
           child.documentReference = newDocumentReference;
           child.children = null;
@@ -566,7 +593,9 @@ public class DocumentWalker {
       }
       int counter = 0;
       for (Node node : newChildren) {
-        node.setOrder(counter++);
+        // ensure e have the last node instance due to moveAdChild which can
+        // have invalidated the document
+        getNode(node.getDocumentReference()).setOrder(counter++);
       }
       // save changes
       for (Node node : allChildren) {
@@ -588,6 +617,11 @@ public class DocumentWalker {
       }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
       return documentReference == null ? "null" : documentReference.toString();
@@ -711,6 +745,7 @@ public class DocumentWalker {
   /** The service. */
   private BibliographyService service;
 
+  /** The authorization manager. */
   private AuthorizationManager authorizationManager;
 
   /**
@@ -722,6 +757,8 @@ public class DocumentWalker {
    *          the document reference resolver
    * @param queryManager
    *          the query manager
+   * @param authorizationManager
+   *          the authorization manager
    */
   public DocumentWalker(BibliographyService service, DocumentReferenceResolver<String> documentReferenceResolver,
       QueryManager queryManager, AuthorizationManager authorizationManager) {
