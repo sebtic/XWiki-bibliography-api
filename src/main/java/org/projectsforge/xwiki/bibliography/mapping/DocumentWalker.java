@@ -72,6 +72,14 @@ public class DocumentWalker {
       this.document = document;
     }
 
+    public boolean canDelete() {
+      return authorizationManager.hasAccess(Right.DELETE, service.getContext().getUserReference(), documentReference);
+    }
+
+    public boolean canEdit() {
+      return authorizationManager.hasAccess(Right.EDIT, service.getContext().getUserReference(), documentReference);
+    }
+
     public boolean canView() {
       return authorizationManager.hasAccess(Right.VIEW, service.getContext().getUserReference(), documentReference);
     }
@@ -450,27 +458,34 @@ public class DocumentWalker {
         return false;
       }
 
+      if (getDocumentReference().equals(child.getDocumentReference())) {
+        return false;
+      }
+
       String newName = child.getDocumentReference().getName();
       if ("WebHome".equals(newName)) {
         // it is the main page of a space => we prefix with the last space name
-        // as
-        // the new name
+        // as the new name
         newName = child.getDocumentReference().getLastSpaceReference().getName() + ".WebHome";
       }
       DocumentReference newDocumentReference = documentReferenceResolver.resolve(newName, getDocumentReference());
 
-      try {
-        child.getXWikiDocument().rename(newDocumentReference, service.getContext());
-        child.getXWikiDocument().setParentReference(getDocumentReference());
-        child.documentReference = newDocumentReference;
-        child.children = null;
-        child.save();
-        nodes.remove(child.getDocumentReference());
-        nodes.put(newDocumentReference, child);
-      } catch (XWikiException ex) {
-        logger.warn(
-            "An error occurred while adding " + child.getDocumentReference() + " as child of " + getDocumentReference(),
-            ex);
+      if (child.canDelete() && authorizationManager.hasAccess(Right.EDIT, service.getContext().getUserReference(),
+          newDocumentReference)) {
+        try {
+          child.getXWikiDocument().rename(newDocumentReference, service.getContext());
+          child.getXWikiDocument().setParentReference(getDocumentReference());
+          child.documentReference = newDocumentReference;
+          child.children = null;
+          child.save();
+          nodes.remove(child.getDocumentReference());
+          nodes.put(newDocumentReference, child);
+        } catch (XWikiException ex) {
+          logger.warn("An error occurred while adding " + child.getDocumentReference() + " as child of "
+              + getDocumentReference(), ex);
+          return false;
+        }
+      } else {
         return false;
       }
 
@@ -550,8 +565,10 @@ public class DocumentWalker {
      *          the new order
      */
     public void setOrder(int order) {
-      new Order(this).setOrder(order);
-      this.order = order;
+      if (canEdit()) {
+        new Order(this).setOrder(order);
+        this.order = order;
+      }
     }
 
     @Override
